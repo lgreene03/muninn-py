@@ -1,0 +1,40 @@
+version: 2
+
+# Dependabot configuration for muninn-py.
+# - Watches pip dependencies declared in pyproject.toml.
+# - Watches the GitHub Actions used by .github/workflows/*.
+# - Weekly cadence; small bumps grouped to reduce noise.
+
+updates:
+  - package-ecosystem: "pip"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+    open-pull-requests-limit: 10
+    groups:
+      runtime:
+        applies-to: version-updates
+        patterns:
+          - "httpx"
+          - "polars"
+          - "pandas"
+          - "pydantic"
+      dev:
+        applies-to: version-updates
+        patterns:
+          - "pytest*"
+          - "respx"
+          - "ruff"
+          - "mypy"
+    labels:
+      - "dependencies"
+
+  - package-ecosystem: "github-actions"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+    labels:
+      - "dependencies"
+      - "github-actions"

@@ -122,6 +122,10 @@ The test suite uses [respx](https://lundberg.github.io/respx/) to mock the Munin
 
 [Apache 2.0](LICENSE). See [NOTICE](NOTICE) on the main repo for attribution.
 
+## Releasing
+
+Publishes go to PyPI via Trusted Publishing (OIDC) on tag push. See [docs/RELEASING.md](docs/RELEASING.md) for the one-time setup and the cut-a-release flow.
+
 ## Related
 
 - [Muninn](https://github.com/lgreene03/muninn) — the server / platform this SDK targets.

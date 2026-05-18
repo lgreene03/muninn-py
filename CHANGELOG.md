@@ -5,6 +5,9 @@ All notable changes to `muninn-py` are documented in this file. Format follows [
 ## [Unreleased]
 
 ### Added
+- Dependabot configuration for `pip` (grouped runtime + dev) and GitHub Actions.
+- Release workflow (`.github/workflows/release.yml`) publishing to PyPI via Trusted Publishing (OIDC). Manual dispatch supports a TestPyPI dry-run.
+- `docs/RELEASING.md` — one-time PyPI Trusted Publisher setup + the cut-a-release flow.
 - Initial bootstrap of the SDK.
 - `MuninnClient` — synchronous `httpx`-backed client with context-manager lifecycle.
 - `MuninnClient.list_features()` — discover registered feature schemas.

@@ -22,9 +22,11 @@ from uuid import UUID
 import httpx
 import polars as pl
 
+from muninn._retry import RetryConfig, call_with_retry_async
 from muninn._transport import (
     DEFAULT_HOST,
     DEFAULT_TIMEOUT,
+    _build_limits,
     assemble_panel,
     build_base_headers,
     extract_rows,
@@ -61,14 +63,20 @@ class AsyncMuninnClient:
         self,
         host: str = DEFAULT_HOST,
         *,
-        timeout: float = DEFAULT_TIMEOUT,
+        timeout: float | httpx.Timeout = DEFAULT_TIMEOUT,
         headers: Mapping[str, str] | None = None,
+        retry: RetryConfig | None = None,
+        max_connections: int | None = None,
+        max_keepalive_connections: int | None = None,
+        keepalive_expiry: float | None = None,
     ) -> None:
         self._client = httpx.AsyncClient(
             base_url=host.rstrip("/"),
             timeout=timeout,
             headers=build_base_headers(headers),
+            limits=_build_limits(max_connections, max_keepalive_connections, keepalive_expiry),
         )
+        self._retry = retry or RetryConfig()
         self._pandas_accessor: Any = None
 
     # ----- pandas-first surface --------------------------------------------
@@ -260,15 +268,24 @@ class AsyncMuninnClient:
         *,
         params: Mapping[str, Any] | None = None,
     ) -> Any:
+        param_dict = dict(params or {})
         try:
-            response = await self._client.get(path, params=dict(params or {}))
+            response = await call_with_retry_async(
+                self._retry,
+                lambda: self._client.get(path, params=param_dict),
+                sleeper=asyncio.sleep,
+            )
         except httpx.TimeoutException as exc:
             raise MuninnTimeoutError(f"GET {path} timed out") from exc
         return unwrap(response)
 
     async def _post_json(self, path: str, *, json: Any) -> Any:
         try:
-            response = await self._client.post(path, json=json)
+            response = await call_with_retry_async(
+                self._retry,
+                lambda: self._client.post(path, json=json),
+                sleeper=asyncio.sleep,
+            )
         except httpx.TimeoutException as exc:
             raise MuninnTimeoutError(f"POST {path} timed out") from exc
         return unwrap(response)

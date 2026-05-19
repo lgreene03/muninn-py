@@ -21,6 +21,7 @@ surface, ``httpx.AsyncClient`` underneath. The sync client also fans
 
 from __future__ import annotations
 
+import time
 from collections.abc import Iterable, Mapping
 from concurrent.futures import ThreadPoolExecutor
 from datetime import datetime
@@ -30,9 +31,11 @@ from uuid import UUID
 import httpx
 import polars as pl
 
+from muninn._retry import RetryConfig, call_with_retry_sync
 from muninn._transport import (
     DEFAULT_HOST,
     DEFAULT_TIMEOUT,
+    _build_limits,
     assemble_panel,
     build_base_headers,
     extract_rows,
@@ -82,16 +85,35 @@ class MuninnClient:
         self,
         host: str = DEFAULT_HOST,
         *,
-        timeout: float = DEFAULT_TIMEOUT,
+        timeout: float | httpx.Timeout = DEFAULT_TIMEOUT,
         headers: Mapping[str, str] | None = None,
         max_workers: int | None = None,
+        retry: RetryConfig | None = None,
+        max_connections: int | None = None,
+        max_keepalive_connections: int | None = None,
+        keepalive_expiry: float | None = None,
     ) -> None:
+        """
+        Parameters
+        ----------
+        timeout:
+            Either a single float (seconds for every operation) or an
+            ``httpx.Timeout`` for per-operation control.
+        retry:
+            :class:`muninn.RetryConfig`. Defaults to 3 attempts with
+            exponential backoff. Pass ``RetryConfig(max_attempts=1)``
+            to disable.
+        max_connections, max_keepalive_connections, keepalive_expiry:
+            Connection-pool tuning. Defaults mirror ``httpx``.
+        """
         self._client = httpx.Client(
             base_url=host.rstrip("/"),
             timeout=timeout,
             headers=build_base_headers(headers),
+            limits=_build_limits(max_connections, max_keepalive_connections, keepalive_expiry),
         )
         self._max_workers = max_workers
+        self._retry = retry or RetryConfig()
         self._pandas_accessor: Any = None
 
     # ----- pandas-first surface --------------------------------------------
@@ -344,15 +366,24 @@ class MuninnClient:
         *,
         params: Mapping[str, Any] | None = None,
     ) -> Any:
+        param_dict = dict(params or {})
         try:
-            response = self._client.get(path, params=dict(params or {}))
+            response = call_with_retry_sync(
+                self._retry,
+                lambda: self._client.get(path, params=param_dict),
+                sleeper=time.sleep,
+            )
         except httpx.TimeoutException as exc:
             raise MuninnTimeoutError(f"GET {path} timed out") from exc
         return unwrap(response)
 
     def _post_json(self, path: str, *, json: Any) -> Any:
         try:
-            response = self._client.post(path, json=json)
+            response = call_with_retry_sync(
+                self._retry,
+                lambda: self._client.post(path, json=json),
+                sleeper=time.sleep,
+            )
         except httpx.TimeoutException as exc:
             raise MuninnTimeoutError(f"POST {path} timed out") from exc
         return unwrap(response)

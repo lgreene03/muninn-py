@@ -34,6 +34,26 @@ def build_base_headers(extra: Mapping[str, str] | None) -> dict[str, str]:
     return headers
 
 
+def _build_limits(
+    max_connections: int | None,
+    max_keepalive_connections: int | None,
+    keepalive_expiry: float | None,
+) -> httpx.Limits:
+    """Construct an ``httpx.Limits`` honoring any operator overrides.
+
+    ``None`` means "use the httpx default". httpx's default values are
+    100 / 20 / 5.0 at the time of writing; we don't restate them here so
+    a future httpx upgrade can refine defaults without an SDK release.
+    """
+    return httpx.Limits(
+        max_connections=max_connections if max_connections is not None else 100,
+        max_keepalive_connections=(
+            max_keepalive_connections if max_keepalive_connections is not None else 20
+        ),
+        keepalive_expiry=keepalive_expiry if keepalive_expiry is not None else 5.0,
+    )
+
+
 def to_iso(value: str | datetime) -> str:
     """Accept either an ISO-8601 string or a ``datetime`` and return a string."""
     if isinstance(value, datetime):

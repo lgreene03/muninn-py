@@ -27,6 +27,7 @@ Quickstart
 """
 
 from muninn import notebook
+from muninn._retry import RetryConfig
 from muninn._version import __version__
 from muninn.async_client import AsyncMuninnClient
 from muninn.client import MuninnClient
@@ -43,6 +44,7 @@ __all__ = [
     "__version__",
     "MuninnClient",
     "AsyncMuninnClient",
+    "RetryConfig",
     "MuninnError",
     "MuninnAPIError",
     "MuninnNotFoundError",

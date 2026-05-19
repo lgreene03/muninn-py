@@ -52,6 +52,9 @@ notebooks = [
     "seaborn>=0.13",
     "pyarrow>=15.0",
 ]
+cache = [
+    "diskcache>=5.6",
+]
 dev = [
     "pytest>=8.0",
     "pytest-asyncio>=0.23",
@@ -59,6 +62,7 @@ dev = [
     "ruff>=0.5",
     "mypy>=1.10",
     "pandas-stubs>=2.0",
+    "diskcache>=5.6",
 ]
 
 [project.urls]
@@ -99,3 +103,10 @@ plugins = ["pydantic.mypy"]
 init_forbid_extra = true
 init_typed = true
 warn_required_dynamic_aliases = true
+
+[[tool.mypy.overrides]]
+# diskcache 5.x ships no py.typed marker. The cache layer accepts Any
+# return types from it deliberately; suppress the missing-stub warning
+# so mypy --strict stays green.
+module = "diskcache"
+ignore_missing_imports = true

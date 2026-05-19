@@ -38,17 +38,17 @@ Phased delivery, mirroring the discipline of the [server-side ROADMAP](https://g
 
 ---
 
-## Phase C — Production Readiness
+## Phase C — Production Readiness ✅
 
 **Goal.** Survive flaky networks, expensive queries, and long-running notebook sessions.
 
-**Deliverables.**
-- **Retry with backoff** on transient failures (5xx, connection reset). Configurable: `MuninnClient(retries=3, backoff="exponential")`.
-- **Distinct connect/read/write/pool timeouts.** Today one global `timeout` covers everything; `httpx` supports the finer breakdown.
-- **Optional disk-based response cache.** `MuninnClient(cache_dir="~/.muninn/cache")`. Feature time-series over closed event-time windows are deterministic — safe to cache indefinitely. Cache invalidation only by manual clear; the server's `code_version` already keys outputs.
-- **Connection pool tunables** (`max_connections`, `keepalive_expiry`).
+**Delivered.**
+- ✅ **Retry with exponential backoff** via `RetryConfig(max_attempts, initial_backoff, max_backoff, backoff_factor, jitter, retry_statuses)`. Retries the configured 5xx and a small list of transport exceptions; never retries 4xx or already-decoded responses. Sync and async paths share policy. Disable with `max_attempts=1`.
+- ✅ **Per-operation timeouts.** `MuninnClient(timeout=httpx.Timeout(connect=, read=, write=, pool=))` alongside the existing `float`.
+- ✅ **Optional disk cache.** `pip install 'muninn-py[cache]'` then `MuninnClient(cache_dir="~/.muninn/cache")`. Caches only closed event-time windows. `client.clear_cache()` drops everything. Cache survives process restart.
+- ✅ **Connection-pool tunables.** `max_connections`, `max_keepalive_connections`, `keepalive_expiry`.
 
-**Exit criteria.** A 5-minute notebook reload with the same query range hits the cache instead of re-fetching. A server returning a 503 once doesn't blow up the notebook session.
+**Exit criteria met.** A 5-minute notebook reload with the same query range hits the cache instead of re-fetching. A server returning a 503 once doesn't blow up the notebook session. **95 unit tests** across 12 source files, all green on Python 3.10 / 3.11 / 3.12.
 
 ---
 

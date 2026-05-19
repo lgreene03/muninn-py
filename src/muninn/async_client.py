@@ -22,6 +22,9 @@ from uuid import UUID
 import httpx
 import polars as pl
 
+from muninn._cache import cache_key, is_cacheable, open_cache
+from muninn._cache import get as cache_get
+from muninn._cache import put as cache_put
 from muninn._retry import RetryConfig, call_with_retry_async
 from muninn._transport import (
     DEFAULT_HOST,
@@ -69,14 +72,17 @@ class AsyncMuninnClient:
         max_connections: int | None = None,
         max_keepalive_connections: int | None = None,
         keepalive_expiry: float | None = None,
+        cache_dir: str | None = None,
     ) -> None:
+        self._host = host.rstrip("/")
         self._client = httpx.AsyncClient(
-            base_url=host.rstrip("/"),
+            base_url=self._host,
             timeout=timeout,
             headers=build_base_headers(headers),
             limits=_build_limits(max_connections, max_keepalive_connections, keepalive_expiry),
         )
         self._retry = retry or RetryConfig()
+        self._cache: Any | None = open_cache(cache_dir) if cache_dir else None
         self._pandas_accessor: Any = None
 
     # ----- pandas-first surface --------------------------------------------
@@ -97,6 +103,19 @@ class AsyncMuninnClient:
 
     async def aclose(self) -> None:
         await self._client.aclose()
+        if self._cache is not None:
+            self._cache.close()
+
+    def clear_cache(self) -> int:
+        """Drop every cached response. Returns the number of entries removed.
+
+        See :meth:`MuninnClient.clear_cache` for the operator-facing rationale.
+        """
+        if self._cache is None:
+            return 0
+        count = len(self._cache)
+        self._cache.clear()
+        return count
 
     async def __aenter__(self) -> AsyncMuninnClient:
         return self
@@ -128,16 +147,35 @@ class AsyncMuninnClient:
         end: str | datetime,
         limit: int | None = None,
     ) -> pl.DataFrame:
+        start_iso = to_iso(start)
+        end_iso = to_iso(end)
         params: dict[str, Any] = {
             "instrument": instrument,
-            "start": to_iso(start),
-            "end": to_iso(end),
+            "start": start_iso,
+            "end": end_iso,
         }
         if limit is not None:
             params["limit"] = limit
 
+        cache_hit_key: str | None = None
+        if self._cache is not None and is_cacheable(end_iso):
+            cache_hit_key = cache_key(
+                host=self._host,
+                feature=feature,
+                instrument=instrument,
+                start=start_iso,
+                end=end_iso,
+                limit=limit,
+            )
+            cached_rows = cache_get(self._cache, cache_hit_key)
+            if cached_rows is not None:
+                values = [FeatureValue.model_validate(r) for r in cached_rows]
+                return values_to_dataframe(values)
+
         payload = await self._get_json(f"/api/v1/features/{feature}", params=params)
         rows = extract_rows(payload, key="values")
+        if cache_hit_key is not None:
+            cache_put(self._cache, cache_hit_key, [dict(r) for r in rows])
         values = [FeatureValue.model_validate(r) for r in rows]
         return values_to_dataframe(values)
 

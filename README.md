@@ -115,6 +115,65 @@ ic = information_coefficient(df, signals=["obi", "vpin"], return_col="fwd_return
 
 Pure functions, Polars-in/Polars-out, no wall-clock reads. Includes `forward_returns`, `information_coefficient`, `rolling_corr`, `hit_rate`.
 
+### Resilient by default
+
+The clients retry transient failures (5xx, connection errors, timeouts) with exponential backoff and disable that behaviour when you want it disabled:
+
+```python
+from muninn import MuninnClient, RetryConfig
+
+with MuninnClient(retry=RetryConfig(max_attempts=5, initial_backoff=0.5)) as m:
+    ...
+
+# Disable retry entirely:
+with MuninnClient(retry=RetryConfig(max_attempts=1)) as m:
+    ...
+```
+
+For finer-grained control of how long each phase of an HTTP call is allowed to take, pass an `httpx.Timeout`:
+
+```python
+import httpx
+
+client = MuninnClient(timeout=httpx.Timeout(connect=2.0, read=30.0, write=10.0, pool=5.0))
+```
+
+Connection-pool tunables are exposed for operators fronting the API behind a load balancer:
+
+```python
+client = MuninnClient(
+    max_connections=50,
+    max_keepalive_connections=10,
+    keepalive_expiry=2.0,
+)
+```
+
+### Disk-cache for closed windows
+
+Feature time-series over closed event-time windows are deterministic on the server side. Opt into a local on-disk cache so notebook iteration doesn't re-fetch the same range every time:
+
+```bash
+pip install 'muninn-py[cache]'
+```
+
+```python
+with MuninnClient(cache_dir="~/.muninn/cache") as m:
+    df = m.get_feature(
+        "vwap.1m", instrument="BTC-USDT",
+        start="2026-05-10T14:00:00Z", end="2026-05-10T15:00:00Z",
+    )                                     # one HTTP call
+    df = m.get_feature(
+        "vwap.1m", instrument="BTC-USDT",
+        start="2026-05-10T14:00:00Z", end="2026-05-10T15:00:00Z",
+    )                                     # cache hit, no HTTP
+```
+
+The cache:
+
+- Stores only closed windows — anything with `end > now` is fetched fresh every time.
+- Survives process restart. Same `cache_dir` between runs reuses entries.
+- Does **not** version on `code_version`. If the server is upgraded with new feature logic, call `client.clear_cache()` after.
+
 ### Pandas-first surface
 
 Already wedded to pandas? Reach the `.pandas` accessor on any client — every method returns `pandas.DataFrame` instead of Polars:

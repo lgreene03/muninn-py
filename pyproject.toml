@@ -39,7 +39,11 @@ dependencies = [
     "polars>=1.0",
     "pandas>=2.0",
     "pydantic>=2.6,<3.0",
+    "click>=8.1,<9",
 ]
+
+[project.scripts]
+muninn = "muninn.cli:main"
 
 [project.optional-dependencies]
 notebooks = [

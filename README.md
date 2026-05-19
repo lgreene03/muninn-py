@@ -79,6 +79,42 @@ Python 3.10+ is required.
 
 `start` and `end` accept either ISO-8601 strings (`"2026-05-10T14:00:00Z"`) or `datetime` instances.
 
+### CLI
+
+Installed automatically with the package:
+
+```bash
+muninn features list
+muninn features get vwap.1m \
+    --instrument BTC-USDT \
+    --start 2026-05-10T14:00:00Z \
+    --end   2026-05-10T15:00:00Z
+muninn replay submit --start 2026-05-10T14:00:00Z --end 2026-05-10T15:00:00Z
+muninn replay status <jobid>
+```
+
+Default host is `http://localhost:8080`; override with `--host` or `MUNINN_HOST`. Output is JSON by default — composable with `jq` and shell pipelines — with `--format table` for human-readable display.
+
+### Notebook helpers
+
+```python
+from muninn import MuninnClient
+from muninn.notebook import forward_returns, information_coefficient
+
+with MuninnClient() as m:
+    df = m.get_features(
+        instrument="BTC-USDT",
+        features=["vwap.1m", "obi", "vpin"],
+        start="2026-05-10T14:00:00Z",
+        end="2026-05-10T18:00:00Z",
+    )
+
+df = forward_returns(df, price_col="vwap.1m", periods=[1, 5])
+ic = information_coefficient(df, signals=["obi", "vpin"], return_col="fwd_return_1")
+```
+
+Pure functions, Polars-in/Polars-out, no wall-clock reads. Includes `forward_returns`, `information_coefficient`, `rolling_corr`, `hit_rate`.
+
 ### Async client
 
 For cooperative-multitasking contexts (FastAPI handlers, async notebooks, integration with other async tooling), use the async sibling — same surface, same return types, `httpx.AsyncClient` underneath:

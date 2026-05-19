@@ -27,6 +27,7 @@ Quickstart
 """
 
 from muninn._version import __version__
+from muninn.async_client import AsyncMuninnClient
 from muninn.client import MuninnClient
 from muninn.exceptions import (
     MuninnAPIError,
@@ -40,6 +41,7 @@ from muninn.models import FeatureDefinition, FeatureValue, ReplayJob, ReplayJobS
 __all__ = [
     "__version__",
     "MuninnClient",
+    "AsyncMuninnClient",
     "MuninnError",
     "MuninnAPIError",
     "MuninnNotFoundError",

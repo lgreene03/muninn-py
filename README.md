@@ -68,15 +68,33 @@ Python 3.10+ is required.
 
 | Method | Returns | Description |
 |---|---|---|
-| `MuninnClient(host="...", timeout=30.0, headers=None)` | client | Construct a sync client. Use as a context manager to auto-close. |
+| `MuninnClient(host="...", timeout=30.0, headers=None, max_workers=None)` | client | Construct a sync client. Use as a context manager to auto-close. |
 | `list_features()` | `list[FeatureDefinition]` | Discover registered feature schemas. |
 | `get_feature(name, *, instrument, start, end, limit=None)` | `pl.DataFrame` | One feature's time-series, sorted by `event_time`. |
-| `get_features(instrument, features, start, end, *, limit=None, join="outer")` | `pl.DataFrame` | Multi-feature panel; joined on `event_time`. |
+| `get_features(instrument, features, start, end, *, limit=None, join="outer", parallel=True)` | `pl.DataFrame` | Multi-feature panel; joined on `event_time`. Fans out across a thread pool when `parallel=True` (default). |
 | `submit_replay_job(*, start, end, topics=None, feature_version=None)` | `ReplayJob` | Submit a new replay; returns the initial `PENDING` state. |
 | `get_replay_job(job_id)` | `ReplayJob` | Poll a single job's status. |
 | `list_replay_jobs()` | `list[ReplayJob]` | All jobs the server is currently tracking. |
 
 `start` and `end` accept either ISO-8601 strings (`"2026-05-10T14:00:00Z"`) or `datetime` instances.
+
+### Async client
+
+For cooperative-multitasking contexts (FastAPI handlers, async notebooks, integration with other async tooling), use the async sibling — same surface, same return types, `httpx.AsyncClient` underneath:
+
+```python
+from muninn import AsyncMuninnClient
+
+async with AsyncMuninnClient() as m:
+    df = await m.get_features(
+        instrument="BTC-USDT",
+        features=["vwap.1m", "obi", "vpin"],
+        start="2026-05-10T14:00:00Z",
+        end="2026-05-10T15:00:00Z",
+    )
+```
+
+`AsyncMuninnClient.get_features` always fans out via `asyncio.gather`. The sync client uses a thread pool with the same effect — both eliminate the serial latency cost of multi-feature fetches.
 
 ## Why "zero configuration"
 

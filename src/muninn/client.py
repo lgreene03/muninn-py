@@ -14,14 +14,15 @@ The client is designed for notebook ergonomics: zero config to start, return
 types are Polars DataFrames (with a one-call escape to Pandas), and errors
 are mapped to a typed exception hierarchy.
 
-A separate async client is intentionally deferred. ``httpx`` supports both
-sync and async with the same API; promoting this client to async is a small,
-mechanical follow-up once a researcher actually needs concurrent fetches.
+For concurrent fetches, use the ``muninn.AsyncMuninnClient`` sibling — same
+surface, ``httpx.AsyncClient`` underneath. The sync client also fans
+``get_features`` across a thread pool when multiple features are requested.
 """
 
 from __future__ import annotations
 
 from collections.abc import Iterable, Mapping
+from concurrent.futures import ThreadPoolExecutor
 from datetime import datetime
 from typing import Any, Literal
 from uuid import UUID
@@ -29,23 +30,24 @@ from uuid import UUID
 import httpx
 import polars as pl
 
-from muninn._version import __version__
-from muninn.exceptions import (
-    MuninnAPIError,
-    MuninnNotFoundError,
-    MuninnTimeoutError,
-    MuninnValidationError,
+from muninn._transport import (
+    DEFAULT_HOST,
+    DEFAULT_TIMEOUT,
+    build_base_headers,
+    extract_rows,
+    feature_value_column,
+    parse_iso,
+    to_iso,
+    unwrap,
+    values_to_dataframe,
 )
+from muninn.exceptions import MuninnAPIError, MuninnTimeoutError
 from muninn.models import (
     FeatureDefinition,
     FeatureValue,
     ReplayJob,
     ReplayJobSubmission,
 )
-
-_DEFAULT_HOST = "http://localhost:8080"
-_DEFAULT_TIMEOUT = 30.0
-_USER_AGENT = f"muninn-py/{__version__}"
 
 
 class MuninnClient:
@@ -54,13 +56,15 @@ class MuninnClient:
     Parameters
     ----------
     host:
-        Base URL of the Muninn server. Defaults to ``http://localhost:8080``
-        — the local-first profile in the main repo.
+        Base URL of the Muninn server. Defaults to ``http://localhost:8080``.
     timeout:
         Per-request timeout in seconds.
     headers:
         Extra HTTP headers to send on every request (e.g., an auth token if
         an operator has fronted the API with a reverse proxy).
+    max_workers:
+        Thread-pool size used by :meth:`get_features` when fanning out across
+        multiple features. Defaults to ``min(8, len(features))`` per call.
 
     Example
     -------
@@ -75,19 +79,18 @@ class MuninnClient:
 
     def __init__(
         self,
-        host: str = _DEFAULT_HOST,
+        host: str = DEFAULT_HOST,
         *,
-        timeout: float = _DEFAULT_TIMEOUT,
+        timeout: float = DEFAULT_TIMEOUT,
         headers: Mapping[str, str] | None = None,
+        max_workers: int | None = None,
     ) -> None:
-        base_headers = {"User-Agent": _USER_AGENT, "Accept": "application/json"}
-        if headers:
-            base_headers.update(headers)
         self._client = httpx.Client(
             base_url=host.rstrip("/"),
             timeout=timeout,
-            headers=base_headers,
+            headers=build_base_headers(headers),
         )
+        self._max_workers = max_workers
 
     # ----- lifecycle -------------------------------------------------------
 
@@ -103,11 +106,7 @@ class MuninnClient:
     # ----- feature discovery -----------------------------------------------
 
     def list_features(self) -> list[FeatureDefinition]:
-        """Return all feature definitions registered on the server.
-
-        Backed by the ``feature_definitions`` table (Flyway migration
-        ``V004__feature_definitions.sql`` on the main repo).
-        """
+        """Return all feature definitions registered on the server."""
         payload = self._get_json("/api/v1/features")
         if not isinstance(payload, list):
             raise MuninnAPIError(
@@ -138,16 +137,16 @@ class MuninnClient:
         """
         params: dict[str, Any] = {
             "instrument": instrument,
-            "start": _to_iso(start),
-            "end": _to_iso(end),
+            "start": to_iso(start),
+            "end": to_iso(end),
         }
         if limit is not None:
             params["limit"] = limit
 
         payload = self._get_json(f"/api/v1/features/{feature}", params=params)
-        rows = _extract_rows(payload, key="values")
+        rows = extract_rows(payload, key="values")
         values = [FeatureValue.model_validate(r) for r in rows]
-        return _values_to_dataframe(values)
+        return values_to_dataframe(values)
 
     def get_features(
         self,
@@ -158,6 +157,7 @@ class MuninnClient:
         *,
         limit: int | None = None,
         join: Literal["outer", "inner"] = "outer",
+        parallel: bool = True,
     ) -> pl.DataFrame:
         """Fetch multiple features and join them on ``event_time``.
 
@@ -171,25 +171,39 @@ class MuninnClient:
             ``"outer"`` keeps every observed timestamp; missing values become
             ``null``. ``"inner"`` keeps only timestamps present in every
             feature.
+        parallel:
+            When ``True`` (default) and more than one feature is requested,
+            fans out the GETs across a thread pool. Pass ``False`` to force
+            serial fetches — useful when debugging or rate-limiting.
         """
         features = list(features)
         if not features:
             raise ValueError("at least one feature name is required")
 
-        frames: list[pl.DataFrame] = []
-        for name in features:
-            single = self.get_feature(
-                name, instrument=instrument, start=start, end=end, limit=limit
-            )
-            if single.is_empty():
-                continue
-            # Pivot from long form (one row per emission) to one column named after the feature.
-            col = single.select(
-                pl.col("event_time"),
-                pl.col("value").alias(name),
-            )
-            frames.append(col)
+        if len(features) == 1 or not parallel:
+            raw_results: list[pl.DataFrame | None] = [
+                self._fetch_column(
+                    name, instrument=instrument, start=start, end=end, limit=limit
+                )
+                for name in features
+            ]
+        else:
+            workers = self._max_workers or min(8, len(features))
+            with ThreadPoolExecutor(max_workers=workers) as pool:
+                futures = [
+                    pool.submit(
+                        self._fetch_column,
+                        name,
+                        instrument=instrument,
+                        start=start,
+                        end=end,
+                        limit=limit,
+                    )
+                    for name in features
+                ]
+                raw_results = [f.result() for f in futures]
 
+        frames: list[pl.DataFrame] = [f for f in raw_results if f is not None]
         if not frames:
             return pl.DataFrame(schema={"event_time": pl.Datetime("us", time_zone="UTC")})
 
@@ -197,8 +211,23 @@ class MuninnClient:
         merged = frames[0]
         for other in frames[1:]:
             merged = merged.join(other, on="event_time", how=how, coalesce=True)
-
         return merged.sort("event_time")
+
+    def _fetch_column(
+        self,
+        name: str,
+        *,
+        instrument: str,
+        start: str | datetime,
+        end: str | datetime,
+        limit: int | None,
+    ) -> pl.DataFrame | None:
+        single = self.get_feature(
+            name, instrument=instrument, start=start, end=end, limit=limit
+        )
+        if single.is_empty():
+            return None
+        return feature_value_column(single, name=name)
 
     # ----- replay jobs ------------------------------------------------------
 
@@ -229,8 +258,8 @@ class MuninnClient:
     ) -> ReplayJob:
         """Submit a new replay job and return its initial (PENDING) state."""
         submission = ReplayJobSubmission(
-            range_from=_parse_iso(start),
-            range_to=_parse_iso(end),
+            range_from=parse_iso(start),
+            range_to=parse_iso(end),
             topics=topics,
             feature_version=feature_version,
         )
@@ -249,111 +278,11 @@ class MuninnClient:
             response = self._client.get(path, params=dict(params or {}))
         except httpx.TimeoutException as exc:
             raise MuninnTimeoutError(f"GET {path} timed out") from exc
-        return self._unwrap(response)
+        return unwrap(response)
 
     def _post_json(self, path: str, *, json: Any) -> Any:
         try:
             response = self._client.post(path, json=json)
         except httpx.TimeoutException as exc:
             raise MuninnTimeoutError(f"POST {path} timed out") from exc
-        return self._unwrap(response)
-
-    @staticmethod
-    def _unwrap(response: httpx.Response) -> Any:
-        if 200 <= response.status_code < 300:
-            if not response.content:
-                return None
-            return response.json()
-
-        message = _extract_error_message(response)
-        body: Any
-        try:
-            body = response.json()
-        except ValueError:
-            body = response.text
-
-        if response.status_code == 404:
-            raise MuninnNotFoundError(
-                message, status_code=404, url=str(response.request.url), body=body
-            )
-        if response.status_code == 400:
-            raise MuninnValidationError(
-                message, status_code=400, url=str(response.request.url), body=body
-            )
-        raise MuninnAPIError(
-            message, status_code=response.status_code, url=str(response.request.url), body=body
-        )
-
-
-# ----- helpers --------------------------------------------------------------
-
-
-def _to_iso(value: str | datetime) -> str:
-    """Accept either an ISO-8601 string or a ``datetime`` and return a string."""
-    if isinstance(value, datetime):
-        return value.isoformat()
-    return value
-
-
-def _parse_iso(value: str | datetime) -> datetime:
-    if isinstance(value, datetime):
-        return value
-    return datetime.fromisoformat(value.replace("Z", "+00:00"))
-
-
-def _extract_rows(payload: Any, *, key: str) -> list[Mapping[str, Any]]:
-    """Tolerate either a bare array or a ``{"<key>": [...]}`` envelope."""
-    if isinstance(payload, list):
-        return list(payload)
-    if isinstance(payload, Mapping):
-        inner = payload.get(key)
-        if isinstance(inner, list):
-            return list(inner)
-    raise MuninnAPIError(
-        f"Expected an array of {key} rows",
-        status_code=200,
-        body=payload,
-    )
-
-
-def _extract_error_message(response: httpx.Response) -> str:
-    try:
-        body = response.json()
-    except ValueError:
-        return response.text or response.reason_phrase or "Request failed"
-    if isinstance(body, Mapping):
-        for key in ("message", "error", "detail", "reason"):
-            value = body.get(key)
-            if isinstance(value, str):
-                return value
-    return response.reason_phrase or "Request failed"
-
-
-def _values_to_dataframe(values: list[FeatureValue]) -> pl.DataFrame:
-    """Convert ``FeatureValue`` rows into a Polars DataFrame sorted by event time."""
-    if not values:
-        return pl.DataFrame(
-            schema={
-                "event_time": pl.Datetime("us", time_zone="UTC"),
-                "window_start": pl.Datetime("us", time_zone="UTC"),
-                "window_end": pl.Datetime("us", time_zone="UTC"),
-                "value": pl.Float64,
-                "feature_name": pl.Utf8,
-                "feature_version": pl.Utf8,
-                "code_version": pl.Utf8,
-            }
-        )
-
-    rows = [
-        {
-            "event_time": v.event_time,
-            "window_start": v.window_start,
-            "window_end": v.window_end,
-            "value": float(v.value) if v.value is not None else None,
-            "feature_name": v.feature_name,
-            "feature_version": v.feature_version,
-            "code_version": v.code_version,
-        }
-        for v in values
-    ]
-    return pl.DataFrame(rows).sort("event_time")
+        return unwrap(response)

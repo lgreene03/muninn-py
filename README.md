@@ -115,6 +115,24 @@ ic = information_coefficient(df, signals=["obi", "vpin"], return_col="fwd_return
 
 Pure functions, Polars-in/Polars-out, no wall-clock reads. Includes `forward_returns`, `information_coefficient`, `rolling_corr`, `hit_rate`.
 
+### Pandas-first surface
+
+Already wedded to pandas? Reach the `.pandas` accessor on any client — every method returns `pandas.DataFrame` instead of Polars:
+
+```python
+with MuninnClient() as m:
+    df = m.pandas.get_features(
+        instrument="BTC-USDT",
+        features=["vwap.1m", "obi"],
+        start="2026-05-10T14:00:00Z",
+        end="2026-05-10T15:00:00Z",
+    )
+    df.head()  # pandas.DataFrame
+```
+
+Available on both `MuninnClient.pandas` and `AsyncMuninnClient.pandas`. The conversion is pyarrow-free — no extra heavy deps to install.
+
+
 ### Async client
 
 For cooperative-multitasking contexts (FastAPI handlers, async notebooks, integration with other async tooling), use the async sibling — same surface, same return types, `httpx.AsyncClient` underneath:

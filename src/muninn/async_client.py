@@ -69,6 +69,21 @@ class AsyncMuninnClient:
             timeout=timeout,
             headers=build_base_headers(headers),
         )
+        self._pandas_accessor: Any = None
+
+    # ----- pandas-first surface --------------------------------------------
+
+    @property
+    def pandas(self) -> Any:
+        """Pandas-flavoured accessor — every coroutine returns ``pandas.DataFrame``.
+
+        See :class:`muninn.pandas_client.AsyncPandasAccessor`.
+        """
+        if self._pandas_accessor is None:
+            from muninn.pandas_client import AsyncPandasAccessor
+
+            self._pandas_accessor = AsyncPandasAccessor(self)
+        return self._pandas_accessor
 
     # ----- lifecycle -------------------------------------------------------
 

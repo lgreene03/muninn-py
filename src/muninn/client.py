@@ -92,6 +92,24 @@ class MuninnClient:
             headers=build_base_headers(headers),
         )
         self._max_workers = max_workers
+        self._pandas_accessor: Any = None
+
+    # ----- pandas-first surface --------------------------------------------
+
+    @property
+    def pandas(self) -> Any:
+        """Pandas-flavoured accessor — every method returns ``pandas.DataFrame``.
+
+        Lazily constructed; the import only happens on first use, so callers
+        that stick to Polars don't pay any cost.
+
+        See :class:`muninn.pandas_client.PandasAccessor`.
+        """
+        if self._pandas_accessor is None:
+            from muninn.pandas_client import PandasAccessor
+
+            self._pandas_accessor = PandasAccessor(self)
+        return self._pandas_accessor
 
     # ----- lifecycle -------------------------------------------------------
 

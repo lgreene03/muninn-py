@@ -140,3 +140,33 @@ def feature_value_column(df: pl.DataFrame, *, name: str) -> pl.DataFrame:
         pl.col("event_time"),
         pl.col("value").alias(name),
     )
+
+
+EMPTY_PANEL_SCHEMA: dict[str, Any] = {
+    "instrument": pl.Utf8,
+    "event_time": pl.Datetime("us", time_zone="UTC"),
+}
+
+
+def assemble_panel(per_instrument_frames: dict[str, pl.DataFrame]) -> pl.DataFrame:
+    """Stack per-instrument feature frames into a long-form panel.
+
+    Each input frame has columns ``event_time`` + one column per feature.
+    Output adds an ``instrument`` column and concatenates. Empty input yields
+    an empty frame with the expected schema rather than a 0-column DataFrame.
+    """
+    rows: list[pl.DataFrame] = []
+    for instrument, df in per_instrument_frames.items():
+        if df.is_empty():
+            continue
+        rows.append(df.with_columns(pl.lit(instrument).alias("instrument")))
+
+    if not rows:
+        return pl.DataFrame(schema=EMPTY_PANEL_SCHEMA)
+
+    stacked = pl.concat(rows, how="diagonal_relaxed")
+    # Put identifying columns first for readability.
+    cols = ["instrument", "event_time"] + [
+        c for c in stacked.columns if c not in ("instrument", "event_time")
+    ]
+    return stacked.select(cols).sort(["instrument", "event_time"])

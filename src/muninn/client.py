@@ -33,6 +33,7 @@ import polars as pl
 from muninn._transport import (
     DEFAULT_HOST,
     DEFAULT_TIMEOUT,
+    assemble_panel,
     build_base_headers,
     extract_rows,
     feature_value_column,
@@ -228,6 +229,57 @@ class MuninnClient:
         if single.is_empty():
             return None
         return feature_value_column(single, name=name)
+
+    def get_panel(
+        self,
+        instruments: Iterable[str],
+        features: Iterable[str],
+        start: str | datetime,
+        end: str | datetime,
+        *,
+        limit: int | None = None,
+        join: Literal["outer", "inner"] = "outer",
+        parallel: bool = True,
+    ) -> pl.DataFrame:
+        """Fetch a multi-instrument, multi-feature panel as a long-form frame.
+
+        Returns columns ``instrument``, ``event_time``, then one column per
+        feature. Rows are sorted by ``(instrument, event_time)``. Each
+        instrument's features are joined as in :meth:`get_features`.
+
+        Concurrency
+        -----------
+        With ``parallel=True`` (default), each instrument's full feature set
+        is fetched concurrently with every other instrument via the thread
+        pool. Within an instrument, features are also fanned out.
+        """
+        instruments = list(instruments)
+        features = list(features)
+        if not instruments:
+            raise ValueError("at least one instrument is required")
+        if not features:
+            raise ValueError("at least one feature name is required")
+
+        def fetch_one(inst: str) -> tuple[str, pl.DataFrame]:
+            df = self.get_features(
+                instrument=inst,
+                features=features,
+                start=start,
+                end=end,
+                limit=limit,
+                join=join,
+                parallel=parallel,
+            )
+            return inst, df
+
+        if len(instruments) == 1 or not parallel:
+            results = [fetch_one(inst) for inst in instruments]
+        else:
+            workers = self._max_workers or min(8, len(instruments))
+            with ThreadPoolExecutor(max_workers=workers) as pool:
+                results = list(pool.map(fetch_one, instruments))
+
+        return assemble_panel(dict(results))
 
     # ----- replay jobs ------------------------------------------------------
 

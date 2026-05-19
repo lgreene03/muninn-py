@@ -72,6 +72,7 @@ Python 3.10+ is required.
 | `list_features()` | `list[FeatureDefinition]` | Discover registered feature schemas. |
 | `get_feature(name, *, instrument, start, end, limit=None)` | `pl.DataFrame` | One feature's time-series, sorted by `event_time`. |
 | `get_features(instrument, features, start, end, *, limit=None, join="outer", parallel=True)` | `pl.DataFrame` | Multi-feature panel; joined on `event_time`. Fans out across a thread pool when `parallel=True` (default). |
+| `get_panel(instruments, features, start, end, *, limit=None, join="outer", parallel=True)` | `pl.DataFrame` | Multi-instrument, multi-feature panel. Long-form: columns are `instrument`, `event_time`, then one per feature. |
 | `submit_replay_job(*, start, end, topics=None, feature_version=None)` | `ReplayJob` | Submit a new replay; returns the initial `PENDING` state. |
 | `get_replay_job(job_id)` | `ReplayJob` | Poll a single job's status. |
 | `list_replay_jobs()` | `list[ReplayJob]` | All jobs the server is currently tracking. |

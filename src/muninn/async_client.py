@@ -25,6 +25,7 @@ import polars as pl
 from muninn._transport import (
     DEFAULT_HOST,
     DEFAULT_TIMEOUT,
+    assemble_panel,
     build_base_headers,
     extract_rows,
     feature_value_column,
@@ -163,6 +164,42 @@ class AsyncMuninnClient:
         if single.is_empty():
             return None
         return feature_value_column(single, name=name)
+
+    async def get_panel(
+        self,
+        instruments: Iterable[str],
+        features: Iterable[str],
+        start: str | datetime,
+        end: str | datetime,
+        *,
+        limit: int | None = None,
+        join: Literal["outer", "inner"] = "outer",
+    ) -> pl.DataFrame:
+        """Fetch a multi-instrument, multi-feature panel via ``asyncio.gather``.
+
+        Returns columns ``instrument``, ``event_time``, then one column per
+        feature. Rows are sorted by ``(instrument, event_time)``.
+        """
+        instruments = list(instruments)
+        features = list(features)
+        if not instruments:
+            raise ValueError("at least one instrument is required")
+        if not features:
+            raise ValueError("at least one feature name is required")
+
+        async def fetch_one(inst: str) -> tuple[str, pl.DataFrame]:
+            df = await self.get_features(
+                instrument=inst,
+                features=features,
+                start=start,
+                end=end,
+                limit=limit,
+                join=join,
+            )
+            return inst, df
+
+        results = await asyncio.gather(*(fetch_one(i) for i in instruments))
+        return assemble_panel(dict(results))
 
     # ----- replay jobs ------------------------------------------------------
 

@@ -5,6 +5,7 @@ All notable changes to `muninn-py` are documented in this file. Format follows [
 ## [Unreleased]
 
 ### Added
+- **Phase B-2 — Multi-instrument `get_panel`.** New method on both clients: `get_panel(instruments=[...], features=[...], start, end)`. Returns a long-form Polars DataFrame with columns `instrument`, `event_time`, then one per feature, sorted by `(instrument, event_time)`. Sync path fans out across the thread pool; async path uses `asyncio.gather`. 6 new tests; total 43 unit tests, all green.
 - **Phase B-1 — `AsyncMuninnClient` and parallel feature fetches.** New `AsyncMuninnClient` mirrors the sync client's surface using `httpx.AsyncClient`. Multi-feature `get_features` calls fan out concurrently via `asyncio.gather` on the async path and via a thread pool on the sync path; `parallel=False` forces serial. Shared transport helpers extracted to `_transport.py` so error mapping and frame construction stay identical. 13 new async tests with `respx`; total now 37 unit tests, all green.
 - `docs/ROADMAP.md` — six-phase delivery plan mirroring the server's discipline. Phase A foundations marked complete; B–F mapped with deliverables, exit criteria, and rationale.
 - Dependabot configuration for `pip` (grouped runtime + dev) and GitHub Actions.

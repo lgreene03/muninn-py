@@ -26,6 +26,7 @@ Quickstart
         df.head()
 """
 
+from muninn import notebook
 from muninn._version import __version__
 from muninn.async_client import AsyncMuninnClient
 from muninn.client import MuninnClient
@@ -51,4 +52,5 @@ __all__ = [
     "FeatureDefinition",
     "ReplayJob",
     "ReplayJobStatus",
+    "notebook",
 ]

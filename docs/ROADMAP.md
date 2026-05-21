@@ -71,7 +71,7 @@ Phased delivery, mirroring the discipline of the [server-side ROADMAP](https://g
 **Goal.** Be installable, discoverable, and explainable.
 
 **Deliverables.**
-- **Mkdocs documentation site.** Auto-rendered API reference (from docstrings + pydantic models), tutorials, the demo notebook rendered as a page. Hosted on GitHub Pages.
+- ✅ **Mkdocs documentation site.** Auto-rendered API reference (from docstrings + pydantic models), getting-started guide, notebook page. Hosted on GitHub Pages via `.github/workflows/docs.yml`.
 - **A second example notebook** beyond alpha-backtest — likely "monitoring feature drift via replay-divergence metrics".
 - **PyPI publish.** Trusted Publisher setup steps already in `docs/RELEASING.md`; this phase is the actual `v0.1.0` tag-and-publish.
 - ✅ **`CONTRIBUTING.md`** and **`SECURITY.md`** matching the server repo's discipline.

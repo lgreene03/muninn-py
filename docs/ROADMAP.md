@@ -74,7 +74,7 @@ Phased delivery, mirroring the discipline of the [server-side ROADMAP](https://g
 - **Mkdocs documentation site.** Auto-rendered API reference (from docstrings + pydantic models), tutorials, the demo notebook rendered as a page. Hosted on GitHub Pages.
 - **A second example notebook** beyond alpha-backtest — likely "monitoring feature drift via replay-divergence metrics".
 - **PyPI publish.** Trusted Publisher setup steps already in `docs/RELEASING.md`; this phase is the actual `v0.1.0` tag-and-publish.
-- **`CONTRIBUTING.md`** and **`SECURITY.md`** matching the server repo's discipline.
+- ✅ **`CONTRIBUTING.md`** and **`SECURITY.md`** matching the server repo's discipline.
 - **Cross-link from server's `companion-sdks` section** with the published doc-site URL once Phase E ships.
 
 **Exit criteria.** `pip install muninn-py` works. A new user reading the docs site for 15 minutes can do meaningful research against a running server.

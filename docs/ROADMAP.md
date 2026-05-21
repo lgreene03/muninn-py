@@ -59,7 +59,7 @@ Phased delivery, mirroring the discipline of the [server-side ROADMAP](https://g
 **Deliverables.**
 - **Testcontainers integration test.** Boots the JVM Muninn server in CI, pushes synthetic trades through the ingestion API, exercises every SDK method against the real server. The single most important add — proves the SDK and server actually agree on the contract.
 - **OpenAPI contract test.** Pull the server's `/api-docs` JSON and assert every endpoint the SDK calls exists with the parameters the SDK sends. Catches server-side breaking changes at PR time.
-- **Performance benchmarks** (`pytest-benchmark`). Baseline a 10K-row `get_feature`. CI fails on > 25 % regression.
+- ✅ **Performance benchmarks** (`pytest-benchmark`). Baseline a 10K-row `get_feature`. CI fails on > 25 % regression once a baseline is committed (`.benchmarks/baseline.json`); see `tests/bench_client.py` for instructions.
 - **Notebook execution in CI.** `nbconvert --execute notebooks/alpha_backtest_demo.ipynb` against a Testcontainers Muninn server. The bundled demo can never silently break.
 
 **Exit criteria.** Every public method has at least one contract test against a real server. The bundled notebook executes end-to-end in CI.

@@ -43,3 +43,54 @@ jobs:
 
       - name: Tests
         run: pytest -ra
+
+  benchmark:
+    name: benchmarks (py3.12)
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python 3.12
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+
+      - name: Install
+        run: |
+          python -m pip install --upgrade pip
+          pip install -e ".[dev]"
+
+      - name: Run benchmarks
+        # --benchmark-only: run only benchmark tests (skip regular tests)
+        # --benchmark-json: save results for artifact upload
+        # When .benchmarks/baseline.json exists (committed), --benchmark-compare
+        # enforces the 25% regression gate. Until a baseline is committed, this
+        # step runs in observation mode and saves the results as an artifact.
+        run: |
+          if [ -f .benchmarks/baseline.json ]; then
+            pytest tests/bench_client.py \
+              --benchmark-only \
+              --benchmark-compare=.benchmarks/baseline.json \
+              --benchmark-fail-max-delta-mean=0.25 \
+              --benchmark-json=benchmark-results.json \
+              -v
+          else
+            pytest tests/bench_client.py \
+              --benchmark-only \
+              --benchmark-json=benchmark-results.json \
+              -v
+            echo "No baseline found. To enable the regression gate, run:"
+            echo "  pytest tests/bench_client.py --benchmark-save=baseline --benchmark-only"
+            echo "then commit .benchmarks/baseline.json"
+          fi
+
+      - name: Upload benchmark results
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: benchmark-results-py3.12
+          path: benchmark-results.json
+          retention-days: 30

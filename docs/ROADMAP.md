@@ -52,7 +52,7 @@ Phased delivery, mirroring the discipline of the [server-side ROADMAP](https://g
 
 ---
 
-## Phase D — Quality
+## Phase D — Quality 🟢
 
 **Goal.** Every claim the SDK README makes is verified by a test that runs on every PR.
 

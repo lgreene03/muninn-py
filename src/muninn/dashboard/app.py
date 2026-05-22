@@ -20,11 +20,7 @@ import streamlit as st
 
 from muninn import MuninnClient
 from muninn.exceptions import MuninnAPIError, MuninnError
-from muninn.notebook import (
-    forward_returns,
-    hit_rate,
-    information_coefficient,
-)
+from muninn.notebook import forward_returns, hit_rate, information_coefficient
 
 
 # ─── Page config ────────────────────────────────────────────────────────────

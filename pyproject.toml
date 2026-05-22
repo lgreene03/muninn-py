@@ -55,6 +55,14 @@ notebooks = [
 cache = [
     "diskcache>=5.6",
 ]
+# Direction A — the Streamlit researcher dashboard. Bundled as an extra so
+# default installs stay lean; `pip install 'muninn-py[dashboard]'` pulls in
+# Streamlit + Plotly and unlocks `muninn dashboard`.
+dashboard = [
+    "streamlit>=1.40",
+    "plotly>=5.24",
+    "pyarrow>=15.0",  # streamlit's recommended interop layer for polars→arrow
+]
 dev = [
     "pytest>=8.0",
     "pytest-asyncio>=0.23",

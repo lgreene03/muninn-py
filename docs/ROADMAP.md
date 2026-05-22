@@ -66,7 +66,7 @@ Phased delivery, mirroring the discipline of the [server-side ROADMAP](https://g
 
 ---
 
-## Phase E — Polish and Distribute
+## Phase E — Polish and Distribute 🟡
 
 **Goal.** Be installable, discoverable, and explainable.
 
@@ -76,6 +76,7 @@ Phased delivery, mirroring the discipline of the [server-side ROADMAP](https://g
 - **PyPI publish.** Trusted Publisher setup steps already in `docs/RELEASING.md`; this phase is the actual `v0.1.0` tag-and-publish.
 - ✅ **`CONTRIBUTING.md`** and **`SECURITY.md`** matching the server repo's discipline.
 - **Cross-link from server's `companion-sdks` section** with the published doc-site URL once Phase E ships.
+- 🟢 **Streamlit researcher dashboard** (`muninn dashboard`, behind the `[dashboard]` extra). Direction A of the four-repo customer-UI plan. Pages: feature explorer, forward-returns + IC, calibration-CSV viewer. The polish surface for "show this to a stakeholder and they get it in 5 minutes". Auth + multi-tenancy explicitly out of scope — that's Direction C, a different product.
 
 **Exit criteria.** `pip install muninn-py` works. A new user reading the docs site for 15 minutes can do meaningful research against a running server.
 

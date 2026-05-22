@@ -189,6 +189,28 @@ def replay_list(ctx: click.Context) -> None:
     _print_output([j.model_dump(mode="json") for j in jobs], ctx.obj["format"])
 
 
+@cli.command()
+def dashboard() -> None:
+    """Launch the Streamlit researcher dashboard.
+
+    Requires the [dashboard] extra:
+
+        pip install 'muninn-py[dashboard]'
+
+    Opens a browser-based UI for feature exploration, forward returns +
+    IC analysis, and calibration-CSV viewing. See ``muninn.dashboard``
+    package docs for the page layout.
+    """
+    try:
+        from muninn.dashboard import main as _dashboard_main
+    except ImportError as exc:  # pragma: no cover - import-time error path
+        raise click.ClickException(
+            "muninn[dashboard] is not installed.\n"
+            "Install with:  pip install 'muninn-py[dashboard]'"
+        ) from exc
+    _dashboard_main()
+
+
 # ----- entry point ----------------------------------------------------------
 
 

@@ -20,7 +20,11 @@ import streamlit as st
 
 from muninn import MuninnClient
 from muninn.exceptions import MuninnAPIError, MuninnError
-from muninn.notebook import forward_returns, hit_rate, information_coefficient
+from muninn.notebook import (
+    forward_returns,
+    hit_rate,
+    information_coefficient,
+)
 
 
 # ─── Page config ────────────────────────────────────────────────────────────
@@ -232,7 +236,7 @@ def _forward_returns_page(client: MuninnClient) -> None:
     end_dt = datetime.now(timezone.utc)
     start_dt = end_dt - timedelta(hours=lookback_hours)
 
-    with st.spinner(f"Loading panel and computing IC…"):
+    with st.spinner("Loading panel and computing IC…"):
         try:
             df = client.get_features(
                 instrument=instrument,
@@ -278,7 +282,7 @@ def _forward_returns_page(client: MuninnClient) -> None:
             y=heat.index,
             colorscale="RdBu",
             zmid=0,
-            colorbar=dict(title="IC"),
+            colorbar={"title": "IC"},
         )
     )
     fig.update_layout(height=400, title="IC by signal × forward period")
@@ -381,7 +385,7 @@ def _calibration_viewer() -> None:
             x=pdf.columns.astype(str),
             y=pdf.index.astype(str),
             colorscale="Viridis",
-            colorbar=dict(title=metric),
+            colorbar={"title": metric},
         )
     )
     fig.update_layout(

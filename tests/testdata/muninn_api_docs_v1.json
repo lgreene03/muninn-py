@@ -1,0 +1,221 @@
+{
+  "openapi": "3.0.3",
+  "info": {
+    "title": "Muninn Feature Engine API",
+    "version": "1.0.0",
+    "description": "Recorded snapshot of the Muninn server's /api-docs endpoint. Used by the SDK's OpenAPI contract test to detect accidental server-side breaking changes. To re-record: start Muninn locally and run `curl http://localhost:8080/api-docs > tests/testdata/muninn_api_docs_v1.json`."
+  },
+  "paths": {
+    "/api/v1/features": {
+      "get": {
+        "operationId": "listFeatures",
+        "summary": "List all registered feature definitions",
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/FeatureDefinition"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/features/{featureName}": {
+      "get": {
+        "operationId": "getFeature",
+        "summary": "Fetch a feature's time-series for a single instrument and window",
+        "parameters": [
+          {
+            "name": "featureName",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "string" }
+          },
+          {
+            "name": "instrument",
+            "in": "query",
+            "required": true,
+            "schema": { "type": "string" },
+            "description": "Symbol identifier, e.g. BTC-USDT"
+          },
+          {
+            "name": "start",
+            "in": "query",
+            "required": true,
+            "schema": { "type": "string", "format": "date-time" },
+            "description": "ISO-8601 range start (inclusive)"
+          },
+          {
+            "name": "end",
+            "in": "query",
+            "required": true,
+            "schema": { "type": "string", "format": "date-time" },
+            "description": "ISO-8601 range end (exclusive)"
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "required": false,
+            "schema": { "type": "integer", "minimum": 1 },
+            "description": "Maximum number of rows to return"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": ["values"],
+                  "properties": {
+                    "values": {
+                      "type": "array",
+                      "items": { "$ref": "#/components/schemas/FeatureValue" }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/replay/jobs": {
+      "get": {
+        "operationId": "listReplayJobs",
+        "summary": "List all replay jobs",
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": { "$ref": "#/components/schemas/ReplayJob" }
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "operationId": "submitReplayJob",
+        "summary": "Submit a new replay job",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/ReplayJobSubmission" }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ReplayJob" }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/replay/jobs/{jobId}": {
+      "get": {
+        "operationId": "getReplayJob",
+        "summary": "Get a replay job by ID",
+        "parameters": [
+          {
+            "name": "jobId",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "string", "format": "uuid" }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ReplayJob" }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "FeatureValue": {
+        "type": "object",
+        "description": "One emitted FeatureComputedEvent row. Field names are camelCase (Java JSON convention). SDK aliases: eventId→event_id, eventTime→event_time, etc.",
+        "required": ["eventId", "eventTime", "featureName", "featureVersion", "windowStart", "windowEnd", "codeVersion"],
+        "properties": {
+          "eventId":        { "type": "string", "format": "uuid" },
+          "eventTime":      { "type": "string", "format": "date-time" },
+          "featureName":    { "type": "string" },
+          "featureVersion": { "type": "string" },
+          "value":          { "type": "number", "nullable": true },
+          "values":         { "type": "object", "nullable": true },
+          "windowStart":    { "type": "string", "format": "date-time" },
+          "windowEnd":      { "type": "string", "format": "date-time" },
+          "inputEventIds":  { "type": "array", "items": { "type": "string" } },
+          "codeVersion":    { "type": "string" }
+        }
+      },
+      "FeatureDefinition": {
+        "type": "object",
+        "required": ["name", "version"],
+        "properties": {
+          "name":           { "type": "string" },
+          "version":        { "type": "string" },
+          "description":    { "type": "string", "nullable": true },
+          "outputKind":     { "type": "string", "nullable": true },
+          "windowDuration": { "type": "string", "nullable": true },
+          "codeVersion":    { "type": "string", "nullable": true }
+        }
+      },
+      "ReplayJob": {
+        "type": "object",
+        "description": "SDK aliases: from→range_from, to→range_to, submittedAt→submitted_at, etc.",
+        "required": ["jobId", "topics", "status", "from", "to", "featureVersion", "outputSink", "submittedAt"],
+        "properties": {
+          "jobId":           { "type": "string", "format": "uuid" },
+          "topics":          { "type": "array", "items": { "type": "string" } },
+          "status":          { "type": "string", "enum": ["PENDING", "RUNNING", "COMPLETED", "FAILED"] },
+          "from":            { "type": "string", "format": "date-time" },
+          "to":              { "type": "string", "format": "date-time" },
+          "featureVersion":  { "type": "string" },
+          "outputSink":      { "type": "string" },
+          "eventsReplayed":  { "type": "integer", "default": 0 },
+          "submittedAt":     { "type": "string", "format": "date-time" },
+          "startedAt":       { "type": "string", "format": "date-time", "nullable": true },
+          "completedAt":     { "type": "string", "format": "date-time", "nullable": true },
+          "elapsed":         { "nullable": true },
+          "error":           { "type": "string", "nullable": true }
+        }
+      },
+      "ReplayJobSubmission": {
+        "type": "object",
+        "description": "Request body keys match the server's expected camelCase field names.",
+        "required": ["from", "to"],
+        "properties": {
+          "from":            { "type": "string", "format": "date-time" },
+          "to":              { "type": "string", "format": "date-time" },
+          "topics":          { "type": "array", "items": { "type": "string" }, "nullable": true },
+          "featureVersion":  { "type": "string", "nullable": true }
+        }
+      }
+    }
+  }
+}

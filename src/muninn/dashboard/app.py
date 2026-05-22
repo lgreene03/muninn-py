@@ -58,7 +58,7 @@ with st.sidebar:
     )
 
 
-@st.cache_resource(show_spinner=False)  # type: ignore[misc]
+@st.cache_resource(show_spinner=False)  # type: ignore[untyped-decorator]
 def _make_client(host: str) -> MuninnClient:
     """One MuninnClient per host — Streamlit caches across reruns."""
     return MuninnClient(host=host)

@@ -632,7 +632,7 @@
   <a href="#phase-e-polish-and-distribute" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Phase E — Polish and Distribute
+        Phase E — Polish and Distribute 🟡
       
     </span>
   </a>
@@ -738,14 +738,15 @@
 - <strong>Notebook execution in CI.</strong> <code>nbconvert --execute notebooks/alpha_backtest_demo.ipynb</code> against a Testcontainers Muninn server. The bundled demo can never silently break.</p>
 <p><strong>Exit criteria.</strong> Every public method has at least one contract test against a real server. The bundled notebook executes end-to-end in CI.</p>
 <hr />
-<h2 id="phase-e-polish-and-distribute">Phase E — Polish and Distribute</h2>
+<h2 id="phase-e-polish-and-distribute">Phase E — Polish and Distribute 🟡</h2>
 <p><strong>Goal.</strong> Be installable, discoverable, and explainable.</p>
 <p><strong>Deliverables.</strong>
 - ✅ <strong>Mkdocs documentation site.</strong> Auto-rendered API reference (from docstrings + pydantic models), getting-started guide, notebook page. Hosted on GitHub Pages via <code>.github/workflows/docs.yml</code>.
 - <strong>A second example notebook</strong> beyond alpha-backtest — likely "monitoring feature drift via replay-divergence metrics".
 - <strong>PyPI publish.</strong> Trusted Publisher setup steps already in <code>docs/RELEASING.md</code>; this phase is the actual <code>v0.1.0</code> tag-and-publish.
 - ✅ <strong><code>CONTRIBUTING.md</code></strong> and <strong><code>SECURITY.md</code></strong> matching the server repo's discipline.
-- <strong>Cross-link from server's <code>companion-sdks</code> section</strong> with the published doc-site URL once Phase E ships.</p>
+- <strong>Cross-link from server's <code>companion-sdks</code> section</strong> with the published doc-site URL once Phase E ships.
+- 🟢 <strong>Streamlit researcher dashboard</strong> (<code>muninn dashboard</code>, behind the <code>[dashboard]</code> extra). Direction A of the four-repo customer-UI plan. Pages: feature explorer, forward-returns + IC, calibration-CSV viewer. The polish surface for "show this to a stakeholder and they get it in 5 minutes". Auth + multi-tenancy explicitly out of scope — that's Direction C, a different product.</p>
 <p><strong>Exit criteria.</strong> <code>pip install muninn-py</code> works. A new user reading the docs site for 15 minutes can do meaningful research against a running server.</p>
 <hr />
 <h2 id="phase-f-future-deferred-speculative">Phase F — Future <em>(deferred / speculative)</em></h2>

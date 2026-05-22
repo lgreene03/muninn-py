@@ -58,7 +58,7 @@ with st.sidebar:
     )
 
 
-@st.cache_resource(show_spinner=False)
+@st.cache_resource(show_spinner=False)  # type: ignore[misc]
 def _make_client(host: str) -> MuninnClient:
     """One MuninnClient per host — Streamlit caches across reruns."""
     return MuninnClient(host=host)
@@ -85,7 +85,7 @@ def _feature_explorer(client: MuninnClient) -> None:
         )
         return
 
-    feature_names = sorted({f.feature_name for f in features})
+    feature_names = sorted({f.name for f in features})
     if not feature_names:
         st.warning("Server returned no feature definitions.")
         return
@@ -192,7 +192,7 @@ def _forward_returns_page(client: MuninnClient) -> None:
         st.error(f"Couldn't list features: {e}")
         return
 
-    feature_names = sorted({f.feature_name for f in features})
+    feature_names = sorted({f.name for f in features})
     if not feature_names:
         st.warning("No features available on this server.")
         return

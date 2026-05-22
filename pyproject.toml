@@ -119,3 +119,11 @@ warn_required_dynamic_aliases = true
 # so mypy --strict stays green.
 module = "diskcache"
 ignore_missing_imports = true
+
+[[tool.mypy.overrides]]
+# The dashboard extra (streamlit + plotly) is optional and CI doesn't
+# install it before running mypy. Neither library ships strict stubs
+# anyway; silence the missing-import noise so the dashboard module
+# can use them naturally.
+module = ["streamlit", "streamlit.*", "plotly", "plotly.*"]
+ignore_missing_imports = true

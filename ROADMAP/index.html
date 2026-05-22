@@ -621,7 +621,7 @@
   <a href="#phase-d-quality" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Phase D — Quality
+        Phase D — Quality 🟢
       
     </span>
   </a>
@@ -729,7 +729,7 @@
 - ✅ <strong>Connection-pool tunables.</strong> <code>max_connections</code>, <code>max_keepalive_connections</code>, <code>keepalive_expiry</code>.</p>
 <p><strong>Exit criteria met.</strong> A 5-minute notebook reload with the same query range hits the cache instead of re-fetching. A server returning a 503 once doesn't blow up the notebook session. <strong>95 unit tests</strong> across 12 source files, all green on Python 3.10 / 3.11 / 3.12.</p>
 <hr />
-<h2 id="phase-d-quality">Phase D — Quality</h2>
+<h2 id="phase-d-quality">Phase D — Quality 🟢</h2>
 <p><strong>Goal.</strong> Every claim the SDK README makes is verified by a test that runs on every PR.</p>
 <p><strong>Deliverables.</strong>
 - <strong>Testcontainers integration test.</strong> Boots the JVM Muninn server in CI, pushes synthetic trades through the ingestion API, exercises every SDK method against the real server. The single most important add — proves the SDK and server actually agree on the contract.

@@ -742,7 +742,7 @@
 <p><strong>Goal.</strong> Be installable, discoverable, and explainable.</p>
 <p><strong>Deliverables.</strong>
 - ✅ <strong>Mkdocs documentation site.</strong> Auto-rendered API reference (from docstrings + pydantic models), getting-started guide, notebook page. Hosted on GitHub Pages via <code>.github/workflows/docs.yml</code>.
-- <strong>A second example notebook</strong> beyond alpha-backtest — likely "monitoring feature drift via replay-divergence metrics".
+- ✅ <strong>A second example notebook</strong> beyond alpha-backtest — <code>notebooks/feature_drift_monitoring.ipynb</code> walks through baseline-vs-observed distributional drift (Δmean in baseline σ, σ-ratio, p95 shift), KDE + time-series visualisation, code-version cohort grouping, and a replay-job throughput sanity check. The notebook source lives in <code>notebooks/_build_drift_notebook.py</code> so diffs review as Python instead of JSON; regenerate the <code>.ipynb</code> with <code>python notebooks/_build_drift_notebook.py</code>.
 - <strong>PyPI publish.</strong> Trusted Publisher setup steps already in <code>docs/RELEASING.md</code>; this phase is the actual <code>v0.1.0</code> tag-and-publish.
 - ✅ <strong><code>CONTRIBUTING.md</code></strong> and <strong><code>SECURITY.md</code></strong> matching the server repo's discipline.
 - <strong>Cross-link from server's <code>companion-sdks</code> section</strong> with the published doc-site URL once Phase E ships.

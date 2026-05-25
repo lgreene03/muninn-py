@@ -585,6 +585,17 @@
   
 </li>
       
+        <li class="md-nav__item">
+  <a href="#feature_drift_monitoringipynb" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        feature_drift_monitoring.ipynb
+      
+    </span>
+  </a>
+  
+</li>
+      
     </ul>
   
 </nav>
@@ -657,6 +668,17 @@
   
 </li>
       
+        <li class="md-nav__item">
+  <a href="#feature_drift_monitoringipynb" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        feature_drift_monitoring.ipynb
+      
+    </span>
+  </a>
+  
+</li>
+      
     </ul>
   
 </nav>
@@ -709,6 +731,32 @@
 <a id="__codelineno-0-12" name="__codelineno-0-12" href="#__codelineno-0-12"></a><span class="n">df</span> <span class="o">=</span> <span class="n">forward_returns</span><span class="p">(</span><span class="n">df</span><span class="p">,</span> <span class="n">price_col</span><span class="o">=</span><span class="s2">&quot;vwap.1m&quot;</span><span class="p">,</span> <span class="n">periods</span><span class="o">=</span><span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">5</span><span class="p">])</span>
 <a id="__codelineno-0-13" name="__codelineno-0-13" href="#__codelineno-0-13"></a><span class="n">ic</span> <span class="o">=</span> <span class="n">information_coefficient</span><span class="p">(</span><span class="n">df</span><span class="p">,</span> <span class="n">signals</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;obi&quot;</span><span class="p">,</span> <span class="s2">&quot;vpin&quot;</span><span class="p">],</span> <span class="n">return_col</span><span class="o">=</span><span class="s2">&quot;fwd_return_1&quot;</span><span class="p">)</span>
 <a id="__codelineno-0-14" name="__codelineno-0-14" href="#__codelineno-0-14"></a><span class="nb">print</span><span class="p">(</span><span class="n">ic</span><span class="p">)</span>
+</code></pre></div>
+<h2 id="feature_drift_monitoringipynb">feature_drift_monitoring.ipynb</h2>
+<p><a href="https://github.com/lgreene03/muninn-py/blob/main/notebooks/feature_drift_monitoring.ipynb">View on GitHub</a></p>
+<p>The SDK-side scaffolding a researcher would run interactively before wiring drift detection
+into production monitoring.</p>
+<p><strong>What it does:</strong></p>
+<ol>
+<li>Pulls a single feature's recent history with <a href="../api/client/#muninn.client.MuninnClient.get_feature"><code>get_feature</code></a>.</li>
+<li>Splits the series into baseline and observed halves on <code>event_time</code>.</li>
+<li>Computes drift metrics: Δmean in baseline σ, σ-ratio, p95 shift. Flags anything outside a
+   researcher-defined band.</li>
+<li>Visualises the two halves with a KDE overlay and a value-over-time plot marking the split.</li>
+<li>Groups the panel by <code>code_version</code> to surface mid-window deploys — a class of regime change
+   the value distribution alone won't explain.</li>
+<li>Submits a replay over the same window with <a href="../api/client/#muninn.client.MuninnClient.submit_replay_job"><code>submit_replay_job</code></a>
+   and reports <code>events_replayed</code>, elapsed time, and ms/event throughput as a sanity ratio.</li>
+</ol>
+<p><strong>Prerequisites:</strong></p>
+<ul>
+<li>A Muninn <code>query-api</code> server at <code>localhost:8080</code> with at least one continuous-output feature
+  registered (e.g. <code>vpin</code> or <code>obi</code>).</li>
+<li><code>pip install "muninn-py[notebooks]"</code>.</li>
+</ul>
+<p><strong>Editing the notebook.</strong> The source lives in <code>notebooks/_build_drift_notebook.py</code> so diffs
+read as Python instead of JSON. Regenerate the <code>.ipynb</code> after editing the source:</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a>python<span class="w"> </span>notebooks/_build_drift_notebook.py
 </code></pre></div>
 
 

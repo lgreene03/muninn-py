@@ -72,7 +72,7 @@ Phased delivery, mirroring the discipline of the [server-side ROADMAP](https://g
 
 **Deliverables.**
 - ✅ **Mkdocs documentation site.** Auto-rendered API reference (from docstrings + pydantic models), getting-started guide, notebook page. Hosted on GitHub Pages via `.github/workflows/docs.yml`.
-- **A second example notebook** beyond alpha-backtest — likely "monitoring feature drift via replay-divergence metrics".
+- ✅ **A second example notebook** beyond alpha-backtest — `notebooks/feature_drift_monitoring.ipynb` walks through baseline-vs-observed distributional drift (Δmean in baseline σ, σ-ratio, p95 shift), KDE + time-series visualisation, code-version cohort grouping, and a replay-job throughput sanity check. The notebook source lives in `notebooks/_build_drift_notebook.py` so diffs review as Python instead of JSON; regenerate the `.ipynb` with `python notebooks/_build_drift_notebook.py`.
 - **PyPI publish.** Trusted Publisher setup steps already in `docs/RELEASING.md`; this phase is the actual `v0.1.0` tag-and-publish.
 - ✅ **`CONTRIBUTING.md`** and **`SECURITY.md`** matching the server repo's discipline.
 - **Cross-link from server's `companion-sdks` section** with the published doc-site URL once Phase E ships.

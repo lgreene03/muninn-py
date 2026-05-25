@@ -37,3 +37,35 @@ df = forward_returns(df, price_col="vwap.1m", periods=[1, 5])
 ic = information_coefficient(df, signals=["obi", "vpin"], return_col="fwd_return_1")
 print(ic)
 ```
+
+## feature_drift_monitoring.ipynb
+
+[View on GitHub](https://github.com/lgreene03/muninn-py/blob/main/notebooks/feature_drift_monitoring.ipynb)
+
+The SDK-side scaffolding a researcher would run interactively before wiring drift detection
+into production monitoring.
+
+**What it does:**
+
+1. Pulls a single feature's recent history with [`get_feature`](api/client.md#muninn.client.MuninnClient.get_feature).
+2. Splits the series into baseline and observed halves on `event_time`.
+3. Computes drift metrics: Δmean in baseline σ, σ-ratio, p95 shift. Flags anything outside a
+   researcher-defined band.
+4. Visualises the two halves with a KDE overlay and a value-over-time plot marking the split.
+5. Groups the panel by `code_version` to surface mid-window deploys — a class of regime change
+   the value distribution alone won't explain.
+6. Submits a replay over the same window with [`submit_replay_job`](api/client.md#muninn.client.MuninnClient.submit_replay_job)
+   and reports `events_replayed`, elapsed time, and ms/event throughput as a sanity ratio.
+
+**Prerequisites:**
+
+- A Muninn `query-api` server at `localhost:8080` with at least one continuous-output feature
+  registered (e.g. `vpin` or `obi`).
+- `pip install "muninn-py[notebooks]"`.
+
+**Editing the notebook.** The source lives in `notebooks/_build_drift_notebook.py` so diffs
+read as Python instead of JSON. Regenerate the `.ipynb` after editing the source:
+
+```bash
+python notebooks/_build_drift_notebook.py
+```

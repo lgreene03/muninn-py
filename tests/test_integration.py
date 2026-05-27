@@ -27,9 +27,10 @@ import os
 import socket
 import time
 import uuid
+from collections.abc import Generator
 from datetime import datetime, timezone
 from pathlib import Path
-from typing import Any, Generator
+from typing import Any
 
 import httpx
 import polars as pl
@@ -182,14 +183,17 @@ def compose_stack() -> Generator[dict[str, Any], None, None]:
     from testcontainers.compose import DockerCompose
 
     # A unique project name avoids collisions if multiple test runs overlap.
+    # testcontainers 4.x dropped the project_name kwarg — propagate it via the
+    # COMPOSE_PROJECT_NAME env var, which docker compose honours and which
+    # produces the same `{project_name}_default` network name we rely on below.
     project_name = f"muninn_integ_{uuid.uuid4().hex[:8]}"
+    os.environ["COMPOSE_PROJECT_NAME"] = project_name
 
     # ---- 1. Boot infrastructure (Postgres, Redpanda, MinIO) ---------------
 
     compose = DockerCompose(
         str(MUNINN_SERVER_DIR),
         compose_file_name="docker-compose.yml",
-        project_name=project_name,
         wait=True,
     )
     compose.start()

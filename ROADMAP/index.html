@@ -621,7 +621,7 @@
   <a href="#phase-d-quality" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Phase D — Quality 🟢
+        Phase D — Quality ✅
       
     </span>
   </a>
@@ -729,14 +729,14 @@
 - ✅ <strong>Connection-pool tunables.</strong> <code>max_connections</code>, <code>max_keepalive_connections</code>, <code>keepalive_expiry</code>.</p>
 <p><strong>Exit criteria met.</strong> A 5-minute notebook reload with the same query range hits the cache instead of re-fetching. A server returning a 503 once doesn't blow up the notebook session. <strong>95 unit tests</strong> across 12 source files, all green on Python 3.10 / 3.11 / 3.12.</p>
 <hr />
-<h2 id="phase-d-quality">Phase D — Quality 🟢</h2>
+<h2 id="phase-d-quality">Phase D — Quality ✅</h2>
 <p><strong>Goal.</strong> Every claim the SDK README makes is verified by a test that runs on every PR.</p>
 <p><strong>Deliverables.</strong>
-- <strong>Testcontainers integration test.</strong> Boots the JVM Muninn server in CI, pushes synthetic trades through the ingestion API, exercises every SDK method against the real server. The single most important add — proves the SDK and server actually agree on the contract.
+- ✅ <strong>Testcontainers integration test.</strong> <code>tests/test_integration.py</code> — 27 tests that boot the full Muninn stack (PostgreSQL + Redpanda + MinIO + JVM server) via <code>testcontainers[compose]</code>, push synthetic trades through the ingestion API, and exercise every SDK method (sync + async): <code>list_features</code>, <code>get_feature</code>, <code>get_features</code>, <code>get_panel</code>, <code>list_replay_jobs</code>, <code>get_replay_job</code>, <code>submit_replay_job</code>. Session-scoped Docker lifecycle; <code>@pytest.mark.integration</code> marker excluded from default <code>pytest</code> runs. Run with <code>pytest -m integration -v</code>.
 - ✅ <strong>OpenAPI contract test.</strong> A recorded spec snapshot at <code>tests/testdata/muninn_api_docs_v1.json</code> (re-recordable via <code>curl http://localhost:8080/api-docs</code>) is checked by <code>tests/test_openapi_contract.py</code> (15 tests). Asserts every endpoint path exists, required query params are declared, and camelCase response field names haven't been renamed server-side. No running server required — static offline test that runs on every PR. To re-sync with a live server: start Muninn locally and run <code>curl -s http://localhost:8080/api-docs | python -m json.tool &gt; tests/testdata/muninn_api_docs_v1.json</code>.
 - ✅ <strong>Performance benchmarks</strong> (<code>pytest-benchmark</code>). Baseline a 10K-row <code>get_feature</code>. CI fails on &gt; 25 % regression once a baseline is committed (<code>.benchmarks/baseline.json</code>); see <code>tests/bench_client.py</code> for instructions.
-- <strong>Notebook execution in CI.</strong> <code>nbconvert --execute notebooks/alpha_backtest_demo.ipynb</code> against a Testcontainers Muninn server. The bundled demo can never silently break.</p>
-<p><strong>Exit criteria.</strong> Every public method has at least one contract test against a real server. The bundled notebook executes end-to-end in CI.</p>
+- ✅ <strong>Notebook execution in CI.</strong> <code>.github/workflows/integration.yml</code> has a <code>notebook-execution</code> job that checks out the Muninn server, boots the full stack via Docker, seeds synthetic data, then runs both notebooks (<code>alpha_backtest_demo.ipynb</code> and <code>feature_drift_monitoring.ipynb</code>) via <code>jupyter nbconvert --execute</code>. Executed notebooks are uploaded as artifacts.</p>
+<p><strong>Exit criteria.</strong> Every public method has at least one contract test against a real server. The bundled notebook executes end-to-end in CI. <em>Met.</em></p>
 <hr />
 <h2 id="phase-e-polish-and-distribute">Phase E — Polish and Distribute 🟡</h2>
 <p><strong>Goal.</strong> Be installable, discoverable, and explainable.</p>
@@ -745,7 +745,7 @@
 - ✅ <strong>A second example notebook</strong> beyond alpha-backtest — <code>notebooks/feature_drift_monitoring.ipynb</code> walks through baseline-vs-observed distributional drift (Δmean in baseline σ, σ-ratio, p95 shift), KDE + time-series visualisation, code-version cohort grouping, and a replay-job throughput sanity check. The notebook source lives in <code>notebooks/_build_drift_notebook.py</code> so diffs review as Python instead of JSON; regenerate the <code>.ipynb</code> with <code>python notebooks/_build_drift_notebook.py</code>.
 - <strong>PyPI publish.</strong> Trusted Publisher setup steps already in <code>docs/RELEASING.md</code>; this phase is the actual <code>v0.1.0</code> tag-and-publish.
 - ✅ <strong><code>CONTRIBUTING.md</code></strong> and <strong><code>SECURITY.md</code></strong> matching the server repo's discipline.
-- <strong>Cross-link from server's <code>companion-sdks</code> section</strong> with the published doc-site URL once Phase E ships.
+- ✅ <strong>Cross-link from server's <code>companion-sdks</code> section</strong> with the published doc-site URL. Muninn server README links to <code>https://lgreene03.github.io/muninn-py</code> alongside the repo URL.
 - 🟢 <strong>Streamlit researcher dashboard</strong> (<code>muninn dashboard</code>, behind the <code>[dashboard]</code> extra). Direction A of the four-repo customer-UI plan. Pages: feature explorer, forward-returns + IC, calibration-CSV viewer. The polish surface for "show this to a stakeholder and they get it in 5 minutes". Auth + multi-tenancy explicitly out of scope — that's Direction C, a different product.</p>
 <p><strong>Exit criteria.</strong> <code>pip install muninn-py</code> works. A new user reading the docs site for 15 minutes can do meaningful research against a running server.</p>
 <hr />

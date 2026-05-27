@@ -613,8 +613,20 @@
 <h1 id="changelog_1">Changelog</h1>
 <p>All notable changes to <code>muninn-py</code> are documented in this file. Format follows <a href="https://keepachangelog.com/en/1.1.0/">Keep a Changelog 1.1.0</a>; versioning follows <a href="https://semver.org/spec/v2.0.0.html">Semantic Versioning</a>.</p>
 <h2 id="unreleased">[Unreleased]</h2>
+<h2 id="010-2026-05-27">[0.1.0] — 2026-05-27</h2>
 <h3 id="added">Added</h3>
 <ul>
+<li><strong>Phase E — Polish and Distribute (in progress).</strong></li>
+<li>MkDocs documentation site deployed to GitHub Pages.</li>
+<li>Second example notebook: <code>feature_drift_monitoring.ipynb</code>.</li>
+<li><code>CONTRIBUTING.md</code> and <code>SECURITY.md</code>.</li>
+<li>Streamlit researcher dashboard (<code>muninn dashboard</code>, behind <code>[dashboard]</code> extra).</li>
+<li>Cross-link from Muninn server README to SDK docs site.</li>
+<li><strong>Phase D — Quality (complete).</strong></li>
+<li>Testcontainers integration test (<code>tests/test_integration.py</code>): 27 tests booting the full Muninn stack and exercising every SDK method (sync + async).</li>
+<li>Integration CI workflow (<code>.github/workflows/integration.yml</code>) with Testcontainers and notebook execution jobs.</li>
+<li>OpenAPI contract test against a recorded spec snapshot (15 tests).</li>
+<li>Performance benchmarks with <code>pytest-benchmark</code> and regression gate.</li>
 <li><strong>Phase C — Production readiness (complete).</strong> Three additions; no existing call site changes.</li>
 <li><strong>Retry with exponential backoff.</strong> <code>RetryConfig</code> exposed at package root: <code>max_attempts</code> (default 3), <code>initial_backoff</code>, <code>max_backoff</code>, <code>backoff_factor</code>, <code>jitter</code>, <code>retry_statuses</code> (default 408/429/500/502/503/504). Retries the configured 5xx and transport exceptions (<code>ConnectError</code>, <code>TimeoutException</code>, <code>RemoteProtocolError</code>, <code>ReadError</code>, <code>WriteError</code>, <code>PoolTimeout</code>). Never retries 4xx or already-decoded responses. Sync uses <code>time.sleep</code>; async uses <code>asyncio.sleep</code>; policy is shared. Disable with <code>RetryConfig(max_attempts=1)</code>.</li>
 <li><strong>Per-operation timeouts and connection-pool tunables.</strong> Constructor <code>timeout</code> now accepts <code>httpx.Timeout(connect=, read=, write=, pool=)</code> in addition to a single <code>float</code>. New <code>max_connections</code>, <code>max_keepalive_connections</code>, <code>keepalive_expiry</code> constructor kwargs.</li>

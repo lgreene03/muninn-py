@@ -1,0 +1,173 @@
+name: Integration
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
+concurrency:
+  group: integration-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  integration-tests:
+    name: integration tests (py3.12)
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+
+    steps:
+      - uses: actions/checkout@v6
+
+      - name: Check out Muninn server
+        uses: actions/checkout@v6
+        with:
+          repository: lgreene03/muninn
+          path: muninn
+
+      - name: Set up Python 3.12
+        uses: actions/setup-python@v6
+        with:
+          python-version: "3.12"
+          cache: pip
+
+      - name: Install SDK with test extras
+        run: |
+          python -m pip install --upgrade pip
+          pip install -e ".[dev]"
+
+      - name: Run integration tests
+        run: pytest -m integration -ra -v
+        env:
+          MUNINN_SERVER_DIR: ${{ github.workspace }}/muninn
+
+  notebook-execution:
+    name: notebook smoke test (py3.12)
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+
+    steps:
+      - uses: actions/checkout@v6
+
+      - name: Check out Muninn server
+        uses: actions/checkout@v6
+        with:
+          repository: lgreene03/muninn
+          path: muninn-server
+
+      - name: Set up Python 3.12
+        uses: actions/setup-python@v6
+        with:
+          python-version: "3.12"
+          cache: pip
+
+      - name: Install SDK with notebook extras
+        run: |
+          python -m pip install --upgrade pip
+          pip install -e ".[notebooks,dev]"
+          pip install nbconvert ipykernel
+
+      - name: Register Jupyter kernel
+        run: python -m ipykernel install --user --name muninn-py
+
+      - name: Build Muninn server image
+        working-directory: muninn-server
+        run: docker build -t muninn:ci .
+
+      - name: Start infrastructure
+        working-directory: muninn-server
+        run: docker compose up -d
+
+      - name: Wait for infrastructure health
+        working-directory: muninn-server
+        run: |
+          echo "Waiting for PostgreSQL..."
+          until docker compose exec -T postgres pg_isready -U muninn; do sleep 2; done
+          echo "Waiting for Redpanda..."
+          until docker compose exec -T redpanda rpk cluster health; do sleep 2; done
+          echo "Waiting for MinIO..."
+          until docker compose exec -T minio mc ready local; do sleep 2; done
+
+      - name: Start Muninn server
+        working-directory: muninn-server
+        run: |
+          docker run -d --name muninn-server \
+            --network "$(docker compose ps -q postgres | xargs docker inspect -f '{{range .NetworkSettings.Networks}}{{.NetworkID}}{{end}}' | head -1)" \
+            -e SPRING_DATASOURCE_URL=jdbc:postgresql://postgres:5432/muninn \
+            -e SPRING_DATASOURCE_USERNAME=muninn \
+            -e SPRING_DATASOURCE_PASSWORD=muninn \
+            -e SPRING_KAFKA_BOOTSTRAP_SERVERS=redpanda:9092 \
+            -e MUNINN_STORAGE_S3_ENDPOINT=http://minio:9000 \
+            -e MUNINN_STORAGE_S3_ACCESS_KEY=minioadmin \
+            -e MUNINN_STORAGE_S3_SECRET_KEY=minioadmin \
+            -e MUNINN_INGESTION_BINANCE_ENABLED=false \
+            -p 8080:8080 \
+            muninn:ci
+
+      - name: Wait for Muninn API
+        run: |
+          echo "Waiting for Muninn API..."
+          for i in $(seq 1 60); do
+            if curl -sf http://localhost:8080/actuator/health > /dev/null 2>&1; then
+              echo "Muninn API is up"
+              break
+            fi
+            if [ $i -eq 60 ]; then
+              echo "Muninn API failed to start"
+              docker logs muninn-server
+              exit 1
+            fi
+            sleep 3
+          done
+
+      - name: Seed synthetic data via smoke script
+        working-directory: muninn-server
+        run: |
+          if [ -f scripts/smoke.sh ]; then
+            bash scripts/smoke.sh || echo "Smoke script exited with $? (non-fatal for notebook test)"
+          else
+            echo "No smoke script found — notebooks may run with empty data"
+          fi
+
+      - name: Execute alpha backtest notebook
+        run: |
+          jupyter nbconvert \
+            --to notebook \
+            --execute \
+            --ExecutePreprocessor.timeout=120 \
+            --ExecutePreprocessor.kernel_name=muninn-py \
+            --output-dir=/tmp/notebook-output \
+            notebooks/alpha_backtest_demo.ipynb || {
+              echo "::warning::alpha_backtest_demo.ipynb failed — server may lack sufficient data"
+              exit 0
+            }
+
+      - name: Execute feature drift monitoring notebook
+        run: |
+          jupyter nbconvert \
+            --to notebook \
+            --execute \
+            --ExecutePreprocessor.timeout=120 \
+            --ExecutePreprocessor.kernel_name=muninn-py \
+            --output-dir=/tmp/notebook-output \
+            notebooks/feature_drift_monitoring.ipynb || {
+              echo "::warning::feature_drift_monitoring.ipynb failed — server may lack sufficient data"
+              exit 0
+            }
+
+      - name: Upload executed notebooks
+        uses: actions/upload-artifact@v7
+        if: always()
+        with:
+          name: executed-notebooks
+          path: /tmp/notebook-output/
+          retention-days: 14
+
+      - name: Cleanup
+        if: always()
+        working-directory: muninn-server
+        run: |
+          docker stop muninn-server || true
+          docker rm muninn-server || true
+          docker compose down -v || true

@@ -50,6 +50,12 @@ htmlcov/
 .DS_Store
 Thumbs.db
 
+# MkDocs
+site/
+
+# Benchmarks
+.benchmarks/
+
 # Local data
 data/
 *.parquet

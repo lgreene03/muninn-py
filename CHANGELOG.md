@@ -4,7 +4,20 @@ All notable changes to `muninn-py` are documented in this file. Format follows [
 
 ## [Unreleased]
 
+## [0.1.0] — 2026-05-27
+
 ### Added
+- **Phase E — Polish and Distribute (in progress).**
+  - MkDocs documentation site deployed to GitHub Pages.
+  - Second example notebook: `feature_drift_monitoring.ipynb`.
+  - `CONTRIBUTING.md` and `SECURITY.md`.
+  - Streamlit researcher dashboard (`muninn dashboard`, behind `[dashboard]` extra).
+  - Cross-link from Muninn server README to SDK docs site.
+- **Phase D — Quality (complete).**
+  - Testcontainers integration test (`tests/test_integration.py`): 27 tests booting the full Muninn stack and exercising every SDK method (sync + async).
+  - Integration CI workflow (`.github/workflows/integration.yml`) with Testcontainers and notebook execution jobs.
+  - OpenAPI contract test against a recorded spec snapshot (15 tests).
+  - Performance benchmarks with `pytest-benchmark` and regression gate.
 - **Phase C — Production readiness (complete).** Three additions; no existing call site changes.
   - **Retry with exponential backoff.** `RetryConfig` exposed at package root: `max_attempts` (default 3), `initial_backoff`, `max_backoff`, `backoff_factor`, `jitter`, `retry_statuses` (default 408/429/500/502/503/504). Retries the configured 5xx and transport exceptions (`ConnectError`, `TimeoutException`, `RemoteProtocolError`, `ReadError`, `WriteError`, `PoolTimeout`). Never retries 4xx or already-decoded responses. Sync uses `time.sleep`; async uses `asyncio.sleep`; policy is shared. Disable with `RetryConfig(max_attempts=1)`.
   - **Per-operation timeouts and connection-pool tunables.** Constructor `timeout` now accepts `httpx.Timeout(connect=, read=, write=, pool=)` in addition to a single `float`. New `max_connections`, `max_keepalive_connections`, `keepalive_expiry` constructor kwargs.

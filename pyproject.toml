@@ -72,6 +72,7 @@ dev = [
     "pandas-stubs>=2.0",
     "diskcache>=5.6",
     "pytest-benchmark>=4.0",
+    "testcontainers[compose]>=4.0",
 ]
 
 [project.urls]
@@ -89,8 +90,11 @@ muninn = ["py.typed"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
-addopts = "-ra --strict-markers"
+addopts = "-ra --strict-markers -m 'not integration'"
 asyncio_mode = "auto"
+markers = [
+    "integration: full-stack integration tests requiring Docker (deselected by default)",
+]
 
 [tool.ruff]
 line-length = 100

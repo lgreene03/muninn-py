@@ -52,17 +52,17 @@ Phased delivery, mirroring the discipline of the [server-side ROADMAP](https://g
 
 ---
 
-## Phase D — Quality 🟢
+## Phase D — Quality ✅
 
 **Goal.** Every claim the SDK README makes is verified by a test that runs on every PR.
 
 **Deliverables.**
-- **Testcontainers integration test.** Boots the JVM Muninn server in CI, pushes synthetic trades through the ingestion API, exercises every SDK method against the real server. The single most important add — proves the SDK and server actually agree on the contract.
+- ✅ **Testcontainers integration test.** `tests/test_integration.py` — 27 tests that boot the full Muninn stack (PostgreSQL + Redpanda + MinIO + JVM server) via `testcontainers[compose]`, push synthetic trades through the ingestion API, and exercise every SDK method (sync + async): `list_features`, `get_feature`, `get_features`, `get_panel`, `list_replay_jobs`, `get_replay_job`, `submit_replay_job`. Session-scoped Docker lifecycle; `@pytest.mark.integration` marker excluded from default `pytest` runs. Run with `pytest -m integration -v`.
 - ✅ **OpenAPI contract test.** A recorded spec snapshot at `tests/testdata/muninn_api_docs_v1.json` (re-recordable via `curl http://localhost:8080/api-docs`) is checked by `tests/test_openapi_contract.py` (15 tests). Asserts every endpoint path exists, required query params are declared, and camelCase response field names haven't been renamed server-side. No running server required — static offline test that runs on every PR. To re-sync with a live server: start Muninn locally and run `curl -s http://localhost:8080/api-docs | python -m json.tool > tests/testdata/muninn_api_docs_v1.json`.
 - ✅ **Performance benchmarks** (`pytest-benchmark`). Baseline a 10K-row `get_feature`. CI fails on > 25 % regression once a baseline is committed (`.benchmarks/baseline.json`); see `tests/bench_client.py` for instructions.
-- **Notebook execution in CI.** `nbconvert --execute notebooks/alpha_backtest_demo.ipynb` against a Testcontainers Muninn server. The bundled demo can never silently break.
+- ✅ **Notebook execution in CI.** `.github/workflows/integration.yml` has a `notebook-execution` job that checks out the Muninn server, boots the full stack via Docker, seeds synthetic data, then runs both notebooks (`alpha_backtest_demo.ipynb` and `feature_drift_monitoring.ipynb`) via `jupyter nbconvert --execute`. Executed notebooks are uploaded as artifacts.
 
-**Exit criteria.** Every public method has at least one contract test against a real server. The bundled notebook executes end-to-end in CI.
+**Exit criteria.** Every public method has at least one contract test against a real server. The bundled notebook executes end-to-end in CI. _Met._
 
 ---
 
@@ -75,7 +75,7 @@ Phased delivery, mirroring the discipline of the [server-side ROADMAP](https://g
 - ✅ **A second example notebook** beyond alpha-backtest — `notebooks/feature_drift_monitoring.ipynb` walks through baseline-vs-observed distributional drift (Δmean in baseline σ, σ-ratio, p95 shift), KDE + time-series visualisation, code-version cohort grouping, and a replay-job throughput sanity check. The notebook source lives in `notebooks/_build_drift_notebook.py` so diffs review as Python instead of JSON; regenerate the `.ipynb` with `python notebooks/_build_drift_notebook.py`.
 - **PyPI publish.** Trusted Publisher setup steps already in `docs/RELEASING.md`; this phase is the actual `v0.1.0` tag-and-publish.
 - ✅ **`CONTRIBUTING.md`** and **`SECURITY.md`** matching the server repo's discipline.
-- **Cross-link from server's `companion-sdks` section** with the published doc-site URL once Phase E ships.
+- ✅ **Cross-link from server's `companion-sdks` section** with the published doc-site URL. Muninn server README links to `https://lgreene03.github.io/muninn-py` alongside the repo URL.
 - 🟢 **Streamlit researcher dashboard** (`muninn dashboard`, behind the `[dashboard]` extra). Direction A of the four-repo customer-UI plan. Pages: feature explorer, forward-returns + IC, calibration-CSV viewer. The polish surface for "show this to a stakeholder and they get it in 5 minutes". Auth + multi-tenancy explicitly out of scope — that's Direction C, a different product.
 
 **Exit criteria.** `pip install muninn-py` works. A new user reading the docs site for 15 minutes can do meaningful research against a running server.

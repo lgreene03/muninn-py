@@ -165,6 +165,34 @@ def _run(cmd: str, *, cwd: Path | None = None, check: bool = True) -> str:
     return result.stdout.strip()
 
 
+def _wait_for_service_health(
+    service: str, *, cwd: Path, timeout: float = 120, interval: float = 2
+) -> None:
+    """Poll until *service*'s container reports a healthy Docker healthcheck.
+
+    Used in place of ``docker compose up --wait``: the Muninn compose file ships
+    a one-shot ``minio-init`` bucket-creator that exits 0 once the buckets exist,
+    and ``--wait`` mis-reports that clean exit as a stack failure. We boot the
+    stack detached and wait on the long-running services' healthchecks directly.
+    """
+    deadline = time.monotonic() + timeout
+    while time.monotonic() < deadline:
+        cid = _run(
+            f"docker compose -f {COMPOSE_FILE} ps -q {service}",
+            cwd=cwd,
+            check=False,
+        )
+        if cid:
+            status = _run(
+                "docker inspect -f '{{.State.Health.Status}}' " + cid,
+                check=False,
+            )
+            if status == "healthy":
+                return
+        time.sleep(interval)
+    raise TimeoutError(f"Service {service!r} did not become healthy within {timeout}s")
+
+
 @pytest.fixture(scope="session")
 def compose_stack() -> Generator[dict[str, Any], None, None]:
     """Boot the full Muninn infrastructure + server via ``docker compose``.
@@ -191,12 +219,20 @@ def compose_stack() -> Generator[dict[str, Any], None, None]:
 
     # ---- 1. Boot infrastructure (Postgres, Redpanda, MinIO) ---------------
 
+    # Boot detached rather than with ``--wait``: the Muninn compose file includes
+    # a one-shot ``minio-init`` service that creates the MinIO buckets and exits 0.
+    # ``docker compose up --wait`` treats that clean exit as a stack failure
+    # (nothing depends on it via ``service_completed_successfully``), so we start
+    # detached and wait on the long-running services' healthchecks ourselves.
     compose = DockerCompose(
         str(MUNINN_SERVER_DIR),
         compose_file_name="docker-compose.yml",
-        wait=True,
+        wait=False,
     )
     compose.start()
+
+    for _svc in ("postgres", "redpanda", "minio"):
+        _wait_for_service_health(_svc, cwd=MUNINN_SERVER_DIR)
 
     # Resolve the host-side ports that Docker assigned. The compose file
     # maps fixed host ports (5433, 19092, 9002), but in CI those may clash.

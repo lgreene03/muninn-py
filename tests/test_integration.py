@@ -86,7 +86,7 @@ def _free_port() -> int:
         return s.getsockname()[1]
 
 
-def _wait_for_http(url: str, *, timeout: float = 120, interval: float = 2) -> None:
+def _wait_for_http(url: str, *, timeout: float = 180, interval: float = 2) -> None:
     """Poll *url* until it returns a 2xx, or raise after *timeout* seconds."""
     deadline = time.monotonic() + timeout
     last_err: Exception | None = None
@@ -95,7 +95,11 @@ def _wait_for_http(url: str, *, timeout: float = 120, interval: float = 2) -> No
             resp = httpx.get(url, timeout=5)
             if resp.status_code < 300:
                 return
-        except (httpx.ConnectError, httpx.ReadError, httpx.TimeoutException) as exc:
+        # TransportError covers ConnectError, ReadError, TimeoutException AND
+        # RemoteProtocolError ("server disconnected without sending a response"),
+        # which a Spring Boot server emits while its port is bound but the app is
+        # still booting. All are transient during startup and must be retried.
+        except httpx.TransportError as exc:
             last_err = exc
         time.sleep(interval)
     raise TimeoutError(
@@ -282,7 +286,7 @@ def compose_stack() -> Generator[dict[str, Any], None, None]:
 
     try:
         # Wait for the server's health endpoint to return 200.
-        _wait_for_http(f"{muninn_url}/actuator/health", timeout=120)
+        _wait_for_http(f"{muninn_url}/actuator/health", timeout=180)
 
         yield {
             "muninn_url": muninn_url,

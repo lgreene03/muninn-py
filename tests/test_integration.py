@@ -23,6 +23,7 @@ to compute against.
 
 from __future__ import annotations
 
+import itertools
 import os
 import socket
 import time
@@ -108,6 +109,9 @@ def _wait_for_http(url: str, *, timeout: float = 180, interval: float = 2) -> No
     )
 
 
+_TRADE_SEQUENCE = itertools.count(1)
+
+
 def _push_synthetic_trade(
     base_url: str,
     *,
@@ -118,26 +122,42 @@ def _push_synthetic_trade(
 ) -> dict[str, Any]:
     """Push a single synthetic trade event through the Muninn ingestion API.
 
-    Returns the JSON response from the server (usually the created event envelope).
+    Posts a flat ``TradeEvent`` document to ``POST /api/v1/events/trade`` — the
+    same contract the server's own ``scripts/smoke.sh`` uses. Returns the JSON
+    response envelope (``{eventId, status, topic}``) on success (HTTP 201).
     """
+    now = datetime.now(timezone.utc).isoformat()
     if event_time is None:
-        event_time = datetime.now(timezone.utc).isoformat()
+        event_time = now
+
+    base_asset, _, quote_asset = instrument.partition("-")
+    if not quote_asset:
+        quote_asset = "USD"
 
     payload = {
-        "eventType": "tradeEvent",
+        "eventId": str(uuid.uuid4()),
         "eventTime": event_time,
-        "partitionKey": instrument,
+        "ingestTime": now,
         "source": "sdk-integration-test",
-        "payload": {
-            "instrument": instrument,
-            "price": price,
-            "quantity": quantity,
-            "side": "BUY",
-            "tradeId": str(uuid.uuid4()),
+        "instrument": {
+            "symbol": instrument,
+            "baseAsset": base_asset,
+            "quoteAsset": quote_asset,
+            "exchange": {
+                "id": "binance",
+                "displayName": "Binance Spot",
+                "timezone": "UTC",
+            },
         },
+        "sequenceNumber": next(_TRADE_SEQUENCE),
+        "schemaVersion": 1,
+        "price": price,
+        "size": quantity,
+        "side": "BUY",
+        "exchangeTradeId": str(uuid.uuid4()),
     }
     resp = httpx.post(
-        f"{base_url}/api/v1/events",
+        f"{base_url}/api/v1/events/trade",
         json=payload,
         timeout=10,
     )
@@ -433,14 +453,18 @@ class TestGetFeature:
         times = df["event_time"].to_list()
         assert times == sorted(times), "DataFrame should be sorted ascending by event_time"
 
-    def test_nonexistent_feature_raises_not_found(self, client: MuninnClient) -> None:
-        with pytest.raises(MuninnNotFoundError):
-            client.get_feature(
-                "this_feature_does_not_exist_xyz",
-                instrument="BTC-USDT",
-                start="2026-01-15T12:00:00Z",
-                end="2026-01-15T12:10:00Z",
-            )
+    def test_nonexistent_feature_returns_empty_dataframe(self, client: MuninnClient) -> None:
+        # The server's /api/v1/features/{featureName} contract declares only
+        # 200/400 — never 404. An unknown feature yields 200 with an empty
+        # `points` array, which the SDK surfaces as an empty DataFrame.
+        df = client.get_feature(
+            "this_feature_does_not_exist_xyz",
+            instrument="BTC-USDT",
+            start="2026-01-15T12:00:00Z",
+            end="2026-01-15T12:10:00Z",
+        )
+        assert isinstance(df, pl.DataFrame)
+        assert df.is_empty()
 
     def test_limit_parameter_caps_rows(self, seeded_client: MuninnClient) -> None:
         features = seeded_client.list_features()

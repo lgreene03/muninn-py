@@ -73,7 +73,7 @@ Phased delivery, mirroring the discipline of the [server-side ROADMAP](https://g
 **Deliverables.**
 - ✅ **Mkdocs documentation site.** Auto-rendered API reference (from docstrings + pydantic models), getting-started guide, notebook page. Hosted on GitHub Pages via `.github/workflows/docs.yml`.
 - ✅ **A second example notebook** beyond alpha-backtest — `notebooks/feature_drift_monitoring.ipynb` walks through baseline-vs-observed distributional drift (Δmean in baseline σ, σ-ratio, p95 shift), KDE + time-series visualisation, code-version cohort grouping, and a replay-job throughput sanity check. The notebook source lives in `notebooks/_build_drift_notebook.py` so diffs review as Python instead of JSON; regenerate the `.ipynb` with `python notebooks/_build_drift_notebook.py`.
-- 🟡 **PyPI publish.** Trusted Publisher setup steps already in `docs/RELEASING.md`; this phase is the actual `v0.1.0` tag-and-publish. Requires one-time manual registration on pypi.org, then `git tag v0.1.0 && git push origin v0.1.0`.
+- 🟡 **PyPI publish.** Trusted Publisher setup steps already in `docs/RELEASING.md`; this phase is the actual `v0.1.0` tag-and-publish. Requires one-time manual registration on pypi.org, then `git tag v0.1.0 && git push origin v0.1.0`. _Gated by **T2** (first external audience — a talk, a shared doc-site URL, or a second person needing the install); see the shared [trigger catalog](https://github.com/lgreene03/sleipnir/blob/main/docs/TRIGGERS.md)._
 - ✅ **`CONTRIBUTING.md`** and **`SECURITY.md`** matching the server repo's discipline.
 - ✅ **Cross-link from server's `companion-sdks` section** with the published doc-site URL. Muninn server README links to `https://lgreene03.github.io/muninn-py` alongside the repo URL.
 - ✅ **Streamlit researcher dashboard** (`muninn dashboard`, behind the `[dashboard]` extra). Direction A of the four-repo customer-UI plan. Pages: feature explorer, forward-returns + IC, calibration-CSV viewer. The polish surface for "show this to a stakeholder and they get it in 5 minutes". Auth + multi-tenancy explicitly out of scope — that's Direction C, a different product.
@@ -85,12 +85,12 @@ Phased delivery, mirroring the discipline of the [server-side ROADMAP](https://g
 
 ## Phase F — Future _(deferred / speculative)_
 
-Tracked so ideas aren't lost; explicitly not scheduled.
+Tracked so ideas aren't lost; explicitly not scheduled. Each is gated by an **observable trigger** (never a date) catalogued in [sleipnir/docs/TRIGGERS.md](https://github.com/lgreene03/sleipnir/blob/main/docs/TRIGGERS.md), the shared cross-repo trigger catalog. When a trigger trips, the item moves out of Phase F into the next numbered phase, marked 🟢 with the trigger ID.
 
-- **WebSocket streaming client** — when the server adds a streaming features endpoint. Not before.
-- **`source` filter for multi-exchange awareness** — the server now ingests from multiple exchanges (ADR-0008 on the server side). The SDK could filter time-series by source tag. Wait for a real use case — features are canonical regardless of which exchange they came from, so the SDK doesn't have to care about sources by default.
-- **Auth helpers.** When operators front the server with reverse-proxy auth, a typed `MuninnClient(auth=BearerToken(...))` helper. Today the `headers={"Authorization": "..."}` escape hatch works; a typed helper is just polish.
-- **Second-language client** — TypeScript for browser dashboards. Significant scope, no current driver.
+- **WebSocket streaming client** — when the server adds a streaming features endpoint. Not before. _Gated by **T3** (muninn ships a streaming features endpoint)._
+- **`source` filter for multi-exchange awareness** — the server now ingests from multiple exchanges (ADR-0008 on the server side). The SDK could filter time-series by source tag. Wait for a real use case — features are canonical regardless of which exchange they came from, so the SDK doesn't have to care about sources by default. _Gated by **T15** (a researcher has a concrete analysis that requires per-exchange feature slicing)._
+- **Auth helpers.** When operators front the server with reverse-proxy auth, a typed `MuninnClient(auth=BearerToken(...))` helper. Today the `headers={"Authorization": "..."}` escape hatch works; a typed helper is just polish. _Gated by **T14** (the server is fronted by reverse-proxy auth in a shared/multi-user deployment)._
+- **Second-language client** — TypeScript for browser dashboards. Significant scope, no current driver. _Gated by **T13** (a browser dashboard is built that calls muninn directly)._
 
 ---
 

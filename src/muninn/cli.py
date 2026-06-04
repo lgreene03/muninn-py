@@ -30,7 +30,7 @@ from typing import Any
 import click
 import polars as pl
 
-from muninn import MuninnClient, __version__
+from muninn import MuninnClient, MuninnStreamClient, __version__
 from muninn.exceptions import MuninnAPIError, MuninnError, MuninnTimeoutError
 
 
@@ -187,6 +187,37 @@ def replay_list(ctx: click.Context) -> None:
     with MuninnClient(host=ctx.obj["host"], timeout=ctx.obj["timeout"]) as client:
         jobs = client.list_replay_jobs()
     _print_output([j.model_dump(mode="json") for j in jobs], ctx.obj["format"])
+
+
+# ----- stream ---------------------------------------------------------------
+
+
+@cli.group()
+def stream() -> None:
+    """Live feature stream over Server-Sent Events."""
+
+
+@stream.command("listen")
+@click.option("--feature", default=None, help="Restrict the stream to one feature name.")
+@click.option(
+    "--count",
+    type=int,
+    default=None,
+    help="Stop after this many events. Default: stream until interrupted.",
+)
+@click.pass_context
+def stream_listen(ctx: click.Context, feature: str | None, count: int | None) -> None:
+    """Print live feature events as newline-delimited JSON, one per line."""
+    emitted = 0
+    with MuninnStreamClient(host=ctx.obj["host"], timeout=ctx.obj["timeout"]) as client:
+        try:
+            for event in client.stream(feature=feature):
+                click.echo(json.dumps(event.model_dump(mode="json"), default=str, sort_keys=True))
+                emitted += 1
+                if count is not None and emitted >= count:
+                    break
+        except KeyboardInterrupt:  # pragma: no cover - interactive interrupt
+            pass
 
 
 @cli.command()

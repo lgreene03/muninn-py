@@ -35,19 +35,24 @@ from muninn.exceptions import (
     MuninnAPIError,
     MuninnError,
     MuninnNotFoundError,
+    MuninnStreamError,
     MuninnTimeoutError,
     MuninnValidationError,
 )
 from muninn.models import FeatureDefinition, FeatureValue, ReplayJob, ReplayJobStatus
+from muninn.streaming import AsyncMuninnStreamClient, MuninnStreamClient
 
 __all__ = [
     "__version__",
     "MuninnClient",
     "AsyncMuninnClient",
+    "MuninnStreamClient",
+    "AsyncMuninnStreamClient",
     "RetryConfig",
     "MuninnError",
     "MuninnAPIError",
     "MuninnNotFoundError",
+    "MuninnStreamError",
     "MuninnTimeoutError",
     "MuninnValidationError",
     "FeatureValue",

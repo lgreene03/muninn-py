@@ -4,6 +4,9 @@ All notable changes to `muninn-py` are documented in this file. Format follows [
 
 ## [Unreleased]
 
+### Added
+- **Phase G — Live streaming client (SSE), promoted by trigger T3.** New `muninn.streaming` module with `MuninnStreamClient` (sync) and `AsyncMuninnStreamClient` (async). Each `stream(feature=None)` connects to the server's `GET /api/v1/features/stream` (`text/event-stream`, muninn ADR-0009) and yields `FeatureValue`s as the feature engine produces them; the optional `feature=` filter restricts to one feature name. Both mirror the existing clients' construction (`host`, `timeout`, `headers`, connection-pool tunables) and context-manager lifecycle. SSE frames are decoded incrementally (multi-line `data`, keepalive comments and non-`feature` events ignored) with no new runtime dependency — pure `httpx.stream`. The read timeout is disabled for the long-lived connection while connect/write/pool stay bounded. HTTP-error mapping reuses the shared `unwrap` path (`MuninnNotFoundError` / `MuninnValidationError` / `MuninnAPIError`); new `MuninnStreamError` covers malformed frames. New CLI command `muninn stream listen [--feature NAME] [--count N]` prints live events as newline-delimited JSON. Exports `MuninnStreamClient`, `AsyncMuninnStreamClient`, `MuninnStreamError` from the package root. New `tests/test_streaming.py` (sync + async) plus a CLI test; ruff + mypy `--strict` clean.
+
 ## [0.1.0] — 2026-05-27
 
 ### Added

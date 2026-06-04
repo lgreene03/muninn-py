@@ -55,6 +55,7 @@ nav:
   - API Reference:
     - Client: api/client.md
     - Async Client: api/async_client.md
+    - Streaming Client: api/streaming.md
     - Models: api/models.md
     - Exceptions: api/exceptions.md
     - Notebook helpers: api/notebook.md

@@ -47,3 +47,7 @@ class MuninnValidationError(MuninnAPIError):
 
 class MuninnTimeoutError(MuninnError):
     """The HTTP call exceeded its configured timeout."""
+
+
+class MuninnStreamError(MuninnError):
+    """The live feature stream ended unexpectedly or delivered a malformed frame."""

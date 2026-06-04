@@ -83,11 +83,27 @@ Phased delivery, mirroring the discipline of the [server-side ROADMAP](https://g
 
 ---
 
+## Phase G — Live streaming client (SSE) ✅ _promoted by T3_
+
+**Goal.** Consume the muninn server's live feature stream so a researcher can watch features evolve in real time instead of polling the historical Query API. **Promoted out of Phase F when trigger T3 tripped** — the server shipped `GET /api/v1/features/stream` (muninn Phase 10 / [ADR-0009](https://github.com/lgreene03/muninn/blob/main/docs/adr/0009-streaming-features-sse.md)).
+
+**Delivered.**
+- ✅ **`MuninnStreamClient`** (sync) and **`AsyncMuninnStreamClient`** (async) in `muninn.streaming`. Each `stream(feature=None)` connects to `GET /api/v1/features/stream` (`text/event-stream`) and yields `FeatureValue`s as the engine produces them; the optional `feature=` filter restricts to one feature name. Both mirror the existing clients' construction (`host`, `timeout`, `headers`, connection-pool tunables) and context-manager lifecycle (`with` / `async with`).
+- ✅ **SSE parsing** via a small incremental `_SseDecoder` (handles multi-line `data`, ignores keepalive comments and non-`feature` events). No new runtime dependency — pure `httpx.stream` + manual frame decode. The read timeout is disabled for the long-lived connection (connect/write/pool stay bounded); keepalives keep it warm.
+- ✅ **Error mapping** reuses the shared `unwrap` path, so a rejected handshake raises the same `MuninnNotFoundError` / `MuninnValidationError` / `MuninnAPIError`. New `MuninnStreamError` covers malformed frames; `MuninnTimeoutError` covers connection timeout.
+- ✅ **CLI** `muninn stream listen [--feature NAME] [--count N]` prints live events as newline-delimited JSON.
+- ✅ **Exports** `MuninnStreamClient`, `AsyncMuninnStreamClient`, `MuninnStreamError` from the package root.
+- ✅ **Tests.** `tests/test_streaming.py` (sync + async: frame parsing, filter passthrough, HTTP-error mapping, malformed-frame handling) and a `muninn stream listen` CLI test, all respx-mocked. Full suite green; ruff + mypy `--strict` clean.
+
+**Exit criteria.** `for e in MuninnStreamClient().stream(feature="vwap.1m"): ...` yields live values sub-second after each window closes. _Met._ _Streaming docs page + a notebook example tracked as polish._
+
+---
+
 ## Phase F — Future _(deferred / speculative)_
 
 Tracked so ideas aren't lost; explicitly not scheduled. Each is gated by an **observable trigger** (never a date) catalogued in [sleipnir/docs/TRIGGERS.md](https://github.com/lgreene03/sleipnir/blob/main/docs/TRIGGERS.md), the shared cross-repo trigger catalog. When a trigger trips, the item moves out of Phase F into the next numbered phase, marked 🟢 with the trigger ID.
 
-- **WebSocket streaming client** — when the server adds a streaming features endpoint. Not before. _Gated by **T3** (muninn ships a streaming features endpoint)._
+- ~~**WebSocket streaming client** — when the server adds a streaming features endpoint.~~ ✅ **Promoted by T3 → delivered as Phase G** (SSE, not WebSocket — the feed is push-only; see ADR-0009). See Phase G above.
 - **`source` filter for multi-exchange awareness** — the server now ingests from multiple exchanges (ADR-0008 on the server side). The SDK could filter time-series by source tag. Wait for a real use case — features are canonical regardless of which exchange they came from, so the SDK doesn't have to care about sources by default. _Gated by **T15** (a researcher has a concrete analysis that requires per-exchange feature slicing)._
 - **Auth helpers.** When operators front the server with reverse-proxy auth, a typed `MuninnClient(auth=BearerToken(...))` helper. Today the `headers={"Authorization": "..."}` escape hatch works; a typed helper is just polish. _Gated by **T14** (the server is fronted by reverse-proxy auth in a shared/multi-user deployment)._
 - **Second-language client** — TypeScript for browser dashboards. Significant scope, no current driver. _Gated by **T13** (a browser dashboard is built that calls muninn directly)._

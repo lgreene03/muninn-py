@@ -193,6 +193,36 @@ def test_replay_list_returns_array() -> None:
     assert json.loads(result.output) == []
 
 
+# ----- stream listen --------------------------------------------------------
+
+
+def _sse_frame(event_time: str, value: str) -> str:
+    return "event: feature\ndata: " + json.dumps(_feature_value(event_time, value)) + "\n\n"
+
+
+@respx.mock
+def test_stream_listen_prints_ndjson() -> None:
+    body = (
+        _sse_frame("2026-05-10T14:00:00Z", "60000")
+        + _sse_frame("2026-05-10T14:01:00Z", "60010")
+    ).encode()
+    respx.get(f"{BASE_URL}/api/v1/features/stream").mock(
+        return_value=httpx.Response(
+            200, content=body, headers={"content-type": "text/event-stream"}
+        )
+    )
+
+    runner = CliRunner()
+    result = runner.invoke(
+        cli, ["stream", "listen", "--feature", "vwap.1m", "--count", "2"], env=_runner_env()
+    )
+
+    assert result.exit_code == 0
+    lines = [line for line in result.output.splitlines() if line.strip()]
+    assert len(lines) == 2
+    assert json.loads(lines[0])["feature_name"] == "vwap.1m"
+
+
 # ----- top-level options ----------------------------------------------------
 
 

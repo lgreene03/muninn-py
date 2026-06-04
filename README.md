@@ -91,6 +91,7 @@ muninn features get vwap.1m \
     --end   2026-05-10T15:00:00Z
 muninn replay submit --start 2026-05-10T14:00:00Z --end 2026-05-10T15:00:00Z
 muninn replay status <jobid>
+muninn stream listen --feature vwap.1m
 ```
 
 Default host is `http://localhost:8080`; override with `--host` or `MUNINN_HOST`. Output is JSON by default — composable with `jq` and shell pipelines — with `--format table` for human-readable display.
@@ -209,6 +210,30 @@ async with AsyncMuninnClient() as m:
 ```
 
 `AsyncMuninnClient.get_features` always fans out via `asyncio.gather`. The sync client uses a thread pool with the same effect — both eliminate the serial latency cost of multi-feature fetches.
+
+### Live streaming (Server-Sent Events)
+
+`get_feature` answers historical questions by reading the warehouse. To *watch* a feature evolve, attach to the server's live stream (`GET /api/v1/features/stream`, muninn [ADR-0009](https://github.com/lgreene03/muninn/blob/main/docs/adr/0009-streaming-features-sse.md)) and receive each value sub-second after its window closes:
+
+```python
+from muninn.streaming import MuninnStreamClient
+
+with MuninnStreamClient() as stream:
+    for event in stream.stream(feature="vwap.1m"):   # omit feature= for all features
+        print(event.feature_name, event.value, event.window_end)
+```
+
+Async sibling — same surface, `async for`:
+
+```python
+from muninn.streaming import AsyncMuninnStreamClient
+
+async with AsyncMuninnStreamClient() as stream:
+    async for event in stream.stream(feature="vwap.1m"):
+        ...
+```
+
+Each yielded object is a `FeatureValue`. The stream is a live tail with **no backfill** — for "last hour, then live", page `get_feature` for history and then attach the stream. From the shell: `muninn stream listen --feature vwap.1m` prints newline-delimited JSON.
 
 ## Why "zero configuration"
 

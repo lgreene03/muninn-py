@@ -420,6 +420,34 @@
   
   
     <li class="md-nav__item">
+      <a href="../api/streaming/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Streaming Client
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
       <a href="../api/models/" class="md-nav__link">
         
   
@@ -640,6 +668,17 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#phase-g-live-streaming-client-sse-promoted-by-t3" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Phase G — Live streaming client (SSE) ✅ promoted by T3
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#phase-f-future-deferred-speculative" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -750,10 +789,21 @@
 - ✅ <strong>SDK smoke test</strong> (<code>scripts/smoke.sh</code>). Validates CLI commands and synthetic trade ingestion against a running Muninn server. Auto-boots the server from sibling repo if not already running.</p>
 <p><strong>Exit criteria.</strong> <code>pip install muninn-py</code> works. A new user reading the docs site for 15 minutes can do meaningful research against a running server. <em>Substantively met; full close pending PyPI publish.</em></p>
 <hr />
+<h2 id="phase-g-live-streaming-client-sse-promoted-by-t3">Phase G — Live streaming client (SSE) ✅ <em>promoted by T3</em></h2>
+<p><strong>Goal.</strong> Consume the muninn server's live feature stream so a researcher can watch features evolve in real time instead of polling the historical Query API. <strong>Promoted out of Phase F when trigger T3 tripped</strong> — the server shipped <code>GET /api/v1/features/stream</code> (muninn Phase 10 / <a href="https://github.com/lgreene03/muninn/blob/main/docs/adr/0009-streaming-features-sse.md">ADR-0009</a>).</p>
+<p><strong>Delivered.</strong>
+- ✅ <strong><code>MuninnStreamClient</code></strong> (sync) and <strong><code>AsyncMuninnStreamClient</code></strong> (async) in <code>muninn.streaming</code>. Each <code>stream(feature=None)</code> connects to <code>GET /api/v1/features/stream</code> (<code>text/event-stream</code>) and yields <code>FeatureValue</code>s as the engine produces them; the optional <code>feature=</code> filter restricts to one feature name. Both mirror the existing clients' construction (<code>host</code>, <code>timeout</code>, <code>headers</code>, connection-pool tunables) and context-manager lifecycle (<code>with</code> / <code>async with</code>).
+- ✅ <strong>SSE parsing</strong> via a small incremental <code>_SseDecoder</code> (handles multi-line <code>data</code>, ignores keepalive comments and non-<code>feature</code> events). No new runtime dependency — pure <code>httpx.stream</code> + manual frame decode. The read timeout is disabled for the long-lived connection (connect/write/pool stay bounded); keepalives keep it warm.
+- ✅ <strong>Error mapping</strong> reuses the shared <code>unwrap</code> path, so a rejected handshake raises the same <code>MuninnNotFoundError</code> / <code>MuninnValidationError</code> / <code>MuninnAPIError</code>. New <code>MuninnStreamError</code> covers malformed frames; <code>MuninnTimeoutError</code> covers connection timeout.
+- ✅ <strong>CLI</strong> <code>muninn stream listen [--feature NAME] [--count N]</code> prints live events as newline-delimited JSON.
+- ✅ <strong>Exports</strong> <code>MuninnStreamClient</code>, <code>AsyncMuninnStreamClient</code>, <code>MuninnStreamError</code> from the package root.
+- ✅ <strong>Tests.</strong> <code>tests/test_streaming.py</code> (sync + async: frame parsing, filter passthrough, HTTP-error mapping, malformed-frame handling) and a <code>muninn stream listen</code> CLI test, all respx-mocked. Full suite green; ruff + mypy <code>--strict</code> clean.</p>
+<p><strong>Exit criteria.</strong> <code>for e in MuninnStreamClient().stream(feature="vwap.1m"): ...</code> yields live values sub-second after each window closes. <em>Met.</em> <em>Streaming docs page + a notebook example tracked as polish.</em></p>
+<hr />
 <h2 id="phase-f-future-deferred-speculative">Phase F — Future <em>(deferred / speculative)</em></h2>
 <p>Tracked so ideas aren't lost; explicitly not scheduled. Each is gated by an <strong>observable trigger</strong> (never a date) catalogued in <a href="https://github.com/lgreene03/sleipnir/blob/main/docs/TRIGGERS.md">sleipnir/docs/TRIGGERS.md</a>, the shared cross-repo trigger catalog. When a trigger trips, the item moves out of Phase F into the next numbered phase, marked 🟢 with the trigger ID.</p>
 <ul>
-<li><strong>WebSocket streaming client</strong> — when the server adds a streaming features endpoint. Not before. <em>Gated by <strong>T3</strong> (muninn ships a streaming features endpoint).</em></li>
+<li>~~<strong>WebSocket streaming client</strong> — when the server adds a streaming features endpoint.~~ ✅ <strong>Promoted by T3 → delivered as Phase G</strong> (SSE, not WebSocket — the feed is push-only; see ADR-0009). See Phase G above.</li>
 <li><strong><code>source</code> filter for multi-exchange awareness</strong> — the server now ingests from multiple exchanges (ADR-0008 on the server side). The SDK could filter time-series by source tag. Wait for a real use case — features are canonical regardless of which exchange they came from, so the SDK doesn't have to care about sources by default. <em>Gated by <strong>T15</strong> (a researcher has a concrete analysis that requires per-exchange feature slicing).</em></li>
 <li><strong>Auth helpers.</strong> When operators front the server with reverse-proxy auth, a typed <code>MuninnClient(auth=BearerToken(...))</code> helper. Today the <code>headers={"Authorization": "..."}</code> escape hatch works; a typed helper is just polish. <em>Gated by <strong>T14</strong> (the server is fronted by reverse-proxy auth in a shared/multi-user deployment).</em></li>
 <li><strong>Second-language client</strong> — TypeScript for browser dashboards. Significant scope, no current driver. <em>Gated by <strong>T13</strong> (a browser dashboard is built that calls muninn directly).</em></li>

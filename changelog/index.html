@@ -422,6 +422,34 @@
   
   
     <li class="md-nav__item">
+      <a href="../api/streaming/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Streaming Client
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
       <a href="../api/models/" class="md-nav__link">
         
   
@@ -613,8 +641,12 @@
 <h1 id="changelog_1">Changelog</h1>
 <p>All notable changes to <code>muninn-py</code> are documented in this file. Format follows <a href="https://keepachangelog.com/en/1.1.0/">Keep a Changelog 1.1.0</a>; versioning follows <a href="https://semver.org/spec/v2.0.0.html">Semantic Versioning</a>.</p>
 <h2 id="unreleased">[Unreleased]</h2>
-<h2 id="010-2026-05-27">[0.1.0] — 2026-05-27</h2>
 <h3 id="added">Added</h3>
+<ul>
+<li><strong>Phase G — Live streaming client (SSE), promoted by trigger T3.</strong> New <code>muninn.streaming</code> module with <code>MuninnStreamClient</code> (sync) and <code>AsyncMuninnStreamClient</code> (async). Each <code>stream(feature=None)</code> connects to the server's <code>GET /api/v1/features/stream</code> (<code>text/event-stream</code>, muninn ADR-0009) and yields <code>FeatureValue</code>s as the feature engine produces them; the optional <code>feature=</code> filter restricts to one feature name. Both mirror the existing clients' construction (<code>host</code>, <code>timeout</code>, <code>headers</code>, connection-pool tunables) and context-manager lifecycle. SSE frames are decoded incrementally (multi-line <code>data</code>, keepalive comments and non-<code>feature</code> events ignored) with no new runtime dependency — pure <code>httpx.stream</code>. The read timeout is disabled for the long-lived connection while connect/write/pool stay bounded. HTTP-error mapping reuses the shared <code>unwrap</code> path (<code>MuninnNotFoundError</code> / <code>MuninnValidationError</code> / <code>MuninnAPIError</code>); new <code>MuninnStreamError</code> covers malformed frames. New CLI command <code>muninn stream listen [--feature NAME] [--count N]</code> prints live events as newline-delimited JSON. Exports <code>MuninnStreamClient</code>, <code>AsyncMuninnStreamClient</code>, <code>MuninnStreamError</code> from the package root. New <code>tests/test_streaming.py</code> (sync + async) plus a CLI test; ruff + mypy <code>--strict</code> clean.</li>
+</ul>
+<h2 id="010-2026-05-27">[0.1.0] — 2026-05-27</h2>
+<h3 id="added_1">Added</h3>
 <ul>
 <li><strong>Phase E — Polish and Distribute (in progress).</strong></li>
 <li>MkDocs documentation site deployed to GitHub Pages.</li>

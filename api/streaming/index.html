@@ -10,31 +10,31 @@
       
       
       
-        <link rel="canonical" href="https://lgreene03.github.io/muninn-py/notebooks/">
+        <link rel="canonical" href="https://lgreene03.github.io/muninn-py/api/streaming/">
       
       
-        <link rel="prev" href="../api/notebook/">
+        <link rel="prev" href="../async_client/">
       
       
-        <link rel="next" href="../changelog/">
+        <link rel="next" href="../models/">
       
       
         
       
       
-      <link rel="icon" href="../assets/images/favicon.png">
+      <link rel="icon" href="../../assets/images/favicon.png">
       <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.6">
     
     
       
-        <title>Notebooks - muninn-py</title>
+        <title>Streaming Client - muninn-py</title>
       
     
     
-      <link rel="stylesheet" href="../assets/stylesheets/main.484c7ddc.min.css">
+      <link rel="stylesheet" href="../../assets/stylesheets/main.484c7ddc.min.css">
       
         
-        <link rel="stylesheet" href="../assets/stylesheets/palette.ab4e12ef.min.css">
+        <link rel="stylesheet" href="../../assets/stylesheets/palette.ab4e12ef.min.css">
       
       
 
@@ -53,9 +53,9 @@
       
     
     
-      <link rel="stylesheet" href="../assets/_mkdocstrings.css">
+      <link rel="stylesheet" href="../../assets/_mkdocstrings.css">
     
-    <script>__md_scope=new URL("..",location),__md_hash=e=>[...e].reduce(((e,_)=>(e<<5)-e+_.charCodeAt(0)),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
+    <script>__md_scope=new URL("../..",location),__md_hash=e=>[...e].reduce(((e,_)=>(e<<5)-e+_.charCodeAt(0)),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
     
       
 
@@ -80,7 +80,7 @@
     <div data-md-component="skip">
       
         
-        <a href="#notebooks" class="md-skip">
+        <a href="#streaming-client" class="md-skip">
           Skip to content
         </a>
       
@@ -96,7 +96,7 @@
 
 <header class="md-header md-header--shadow" data-md-component="header">
   <nav class="md-header__inner md-grid" aria-label="Header">
-    <a href=".." title="muninn-py" class="md-header__button md-logo" aria-label="muninn-py" data-md-component="logo">
+    <a href="../.." title="muninn-py" class="md-header__button md-logo" aria-label="muninn-py" data-md-component="logo">
       
   
   <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
@@ -116,7 +116,7 @@
         <div class="md-header__topic" data-md-component="header-topic">
           <span class="md-ellipsis">
             
-              Notebooks
+              Streaming Client
             
           </span>
         </div>
@@ -232,7 +232,7 @@
 
 <nav class="md-nav md-nav--primary" aria-label="Navigation" data-md-level="0">
   <label class="md-nav__title" for="__drawer">
-    <a href=".." title="muninn-py" class="md-nav__button md-logo" aria-label="muninn-py" data-md-component="logo">
+    <a href="../.." title="muninn-py" class="md-nav__button md-logo" aria-label="muninn-py" data-md-component="logo">
       
   
   <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
@@ -262,7 +262,7 @@
   
   
     <li class="md-nav__item">
-      <a href=".." class="md-nav__link">
+      <a href="../.." class="md-nav__link">
         
   
   
@@ -289,7 +289,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../getting-started/" class="md-nav__link">
+      <a href="../../getting-started/" class="md-nav__link">
         
   
   
@@ -313,8 +313,10 @@
       
   
   
+    
   
   
+  
     
     
     
@@ -325,11 +327,11 @@
       
     
     
-    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+    <li class="md-nav__item md-nav__item--active md-nav__item--section md-nav__item--nested">
       
         
         
-        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3" >
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3" checked>
         
           
           <label class="md-nav__link" for="__nav_3" id="__nav_3_label" tabindex="">
@@ -350,7 +352,7 @@
             <span class="md-nav__icon md-icon"></span>
           </label>
         
-        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_3_label" aria-expanded="false">
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_3_label" aria-expanded="true">
           <label class="md-nav__title" for="__nav_3">
             <span class="md-nav__icon md-icon"></span>
             
@@ -368,7 +370,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../api/client/" class="md-nav__link">
+      <a href="../client/" class="md-nav__link">
         
   
   
@@ -396,7 +398,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../api/async_client/" class="md-nav__link">
+      <a href="../async_client/" class="md-nav__link">
         
   
   
@@ -421,10 +423,37 @@
                 
   
   
+    
   
   
-    <li class="md-nav__item">
-      <a href="../api/streaming/" class="md-nav__link">
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
+      
+      
+        
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Streaming Client
+  
+
+    
+  </span>
+  
+  
+
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <a href="./" class="md-nav__link md-nav__link--active">
         
   
   
@@ -440,6 +469,82 @@
   
 
       </a>
+      
+        
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#muninn.streaming.MuninnStreamClient" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        MuninnStreamClient
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="MuninnStreamClient">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#muninn.streaming.MuninnStreamClient.stream" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        stream
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#muninn.streaming.AsyncMuninnStreamClient" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        AsyncMuninnStreamClient
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="AsyncMuninnStreamClient">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#muninn.streaming.AsyncMuninnStreamClient.stream" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        stream
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
     </li>
   
 
@@ -452,7 +557,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../api/models/" class="md-nav__link">
+      <a href="../models/" class="md-nav__link">
         
   
   
@@ -480,7 +585,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../api/exceptions/" class="md-nav__link">
+      <a href="../exceptions/" class="md-nav__link">
         
   
   
@@ -508,7 +613,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../api/notebook/" class="md-nav__link">
+      <a href="../notebook/" class="md-nav__link">
         
   
   
@@ -540,37 +645,10 @@
       
   
   
-    
   
   
-  
-    <li class="md-nav__item md-nav__item--active">
-      
-      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
-      
-      
-        
-      
-      
-        <label class="md-nav__link md-nav__link--active" for="__toc">
-          
-  
-  
-  <span class="md-ellipsis">
-    
-  
-    Notebooks
-  
-
-    
-  </span>
-  
-  
-
-          <span class="md-nav__icon md-icon"></span>
-        </label>
-      
-      <a href="./" class="md-nav__link md-nav__link--active">
+    <li class="md-nav__item">
+      <a href="../../notebooks/" class="md-nav__link">
         
   
   
@@ -586,48 +664,6 @@
   
 
       </a>
-      
-        
-
-<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
-  
-  
-  
-    
-  
-  
-    <label class="md-nav__title" for="__toc">
-      <span class="md-nav__icon md-icon"></span>
-      Table of contents
-    </label>
-    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
-      
-        <li class="md-nav__item">
-  <a href="#alpha_backtest_demoipynb" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        alpha_backtest_demo.ipynb
-      
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#feature_drift_monitoringipynb" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        feature_drift_monitoring.ipynb
-      
-    </span>
-  </a>
-  
-</li>
-      
-    </ul>
-  
-</nav>
-      
     </li>
   
 
@@ -639,7 +675,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../changelog/" class="md-nav__link">
+      <a href="../../changelog/" class="md-nav__link">
         
   
   
@@ -686,24 +722,58 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
-  <a href="#alpha_backtest_demoipynb" class="md-nav__link">
+  <a href="#muninn.streaming.MuninnStreamClient" class="md-nav__link">
     <span class="md-ellipsis">
       
-        alpha_backtest_demo.ipynb
+        MuninnStreamClient
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="MuninnStreamClient">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#muninn.streaming.MuninnStreamClient.stream" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        stream
       
     </span>
   </a>
   
 </li>
+        
+      </ul>
+    </nav>
+  
+</li>
       
         <li class="md-nav__item">
-  <a href="#feature_drift_monitoringipynb" class="md-nav__link">
+  <a href="#muninn.streaming.AsyncMuninnStreamClient" class="md-nav__link">
     <span class="md-ellipsis">
       
-        feature_drift_monitoring.ipynb
+        AsyncMuninnStreamClient
       
     </span>
   </a>
+  
+    <nav class="md-nav" aria-label="AsyncMuninnStreamClient">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#muninn.streaming.AsyncMuninnStreamClient.stream" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        stream
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
   
 </li>
       
@@ -727,65 +797,151 @@
   
 
 
-<h1 id="notebooks">Notebooks</h1>
-<h2 id="alpha_backtest_demoipynb">alpha_backtest_demo.ipynb</h2>
-<p><a href="https://github.com/lgreene03/muninn-py/blob/main/notebooks/alpha_backtest_demo.ipynb">View on GitHub</a></p>
-<p>A self-contained research workflow demonstration against a running Muninn <code>query-api</code>.</p>
-<p><strong>What it does:</strong></p>
-<ol>
-<li>Connects to a local Muninn server and fetches <code>vwap.1m</code>, <code>obi</code>, and <code>vpin</code> for <code>BTC-USDT</code> over a 4-hour window.</li>
-<li>Computes multi-period forward log-returns from the VWAP series using <a href="../api/notebook/#muninn.notebook.forward_returns"><code>forward_returns</code></a>.</li>
-<li>Measures the Information Coefficient (Spearman rank correlation between each signal and the 1-step-ahead return) using <a href="../api/notebook/#muninn.notebook.information_coefficient"><code>information_coefficient</code></a>.</li>
-<li>Plots a correlation heatmap and rolling IC using <a href="../api/notebook/#muninn.notebook.rolling_corr"><code>rolling_corr</code></a>.</li>
-<li>Submits a replay job and polls until completion, demonstrating the determinism property.</li>
-</ol>
-<p><strong>Prerequisites:</strong></p>
-<ul>
-<li>A Muninn <code>query-api</code> server at <code>localhost:8080</code> with <code>vwap.1m</code>, <code>obi</code>, and <code>vpin</code> registered.</li>
-<li><code>pip install "muninn-py[notebooks]"</code> for Polars, matplotlib, seaborn, and pyarrow.</li>
-</ul>
-<p><strong>What this demo is not:</strong> It is not a trading strategy. The point is reproducibility — every value produced by the notebook can be reproduced byte-for-byte by a server replay. See <a href="https://github.com/lgreene03/muninn/blob/main/docs/steering/DETERMINISTIC_REPLAY.md">DETERMINISTIC_REPLAY.md</a> on the server side.</p>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="kn">from</span><span class="w"> </span><span class="nn">muninn</span><span class="w"> </span><span class="kn">import</span> <span class="n">MuninnClient</span>
-<a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a><span class="kn">from</span><span class="w"> </span><span class="nn">muninn.notebook</span><span class="w"> </span><span class="kn">import</span> <span class="n">forward_returns</span><span class="p">,</span> <span class="n">information_coefficient</span>
-<a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a>
-<a id="__codelineno-0-4" name="__codelineno-0-4" href="#__codelineno-0-4"></a><span class="k">with</span> <span class="n">MuninnClient</span><span class="p">()</span> <span class="k">as</span> <span class="n">m</span><span class="p">:</span>
-<a id="__codelineno-0-5" name="__codelineno-0-5" href="#__codelineno-0-5"></a>    <span class="n">df</span> <span class="o">=</span> <span class="n">m</span><span class="o">.</span><span class="n">get_features</span><span class="p">(</span>
-<a id="__codelineno-0-6" name="__codelineno-0-6" href="#__codelineno-0-6"></a>        <span class="n">instrument</span><span class="o">=</span><span class="s2">&quot;BTC-USDT&quot;</span><span class="p">,</span>
-<a id="__codelineno-0-7" name="__codelineno-0-7" href="#__codelineno-0-7"></a>        <span class="n">features</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;vwap.1m&quot;</span><span class="p">,</span> <span class="s2">&quot;obi&quot;</span><span class="p">,</span> <span class="s2">&quot;vpin&quot;</span><span class="p">],</span>
-<a id="__codelineno-0-8" name="__codelineno-0-8" href="#__codelineno-0-8"></a>        <span class="n">start</span><span class="o">=</span><span class="s2">&quot;2026-05-10T14:00:00Z&quot;</span><span class="p">,</span>
-<a id="__codelineno-0-9" name="__codelineno-0-9" href="#__codelineno-0-9"></a>        <span class="n">end</span><span class="o">=</span><span class="s2">&quot;2026-05-10T18:00:00Z&quot;</span><span class="p">,</span>
-<a id="__codelineno-0-10" name="__codelineno-0-10" href="#__codelineno-0-10"></a>    <span class="p">)</span>
-<a id="__codelineno-0-11" name="__codelineno-0-11" href="#__codelineno-0-11"></a>
-<a id="__codelineno-0-12" name="__codelineno-0-12" href="#__codelineno-0-12"></a><span class="n">df</span> <span class="o">=</span> <span class="n">forward_returns</span><span class="p">(</span><span class="n">df</span><span class="p">,</span> <span class="n">price_col</span><span class="o">=</span><span class="s2">&quot;vwap.1m&quot;</span><span class="p">,</span> <span class="n">periods</span><span class="o">=</span><span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">5</span><span class="p">])</span>
-<a id="__codelineno-0-13" name="__codelineno-0-13" href="#__codelineno-0-13"></a><span class="n">ic</span> <span class="o">=</span> <span class="n">information_coefficient</span><span class="p">(</span><span class="n">df</span><span class="p">,</span> <span class="n">signals</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;obi&quot;</span><span class="p">,</span> <span class="s2">&quot;vpin&quot;</span><span class="p">],</span> <span class="n">return_col</span><span class="o">=</span><span class="s2">&quot;fwd_return_1&quot;</span><span class="p">)</span>
-<a id="__codelineno-0-14" name="__codelineno-0-14" href="#__codelineno-0-14"></a><span class="nb">print</span><span class="p">(</span><span class="n">ic</span><span class="p">)</span>
-</code></pre></div>
-<h2 id="feature_drift_monitoringipynb">feature_drift_monitoring.ipynb</h2>
-<p><a href="https://github.com/lgreene03/muninn-py/blob/main/notebooks/feature_drift_monitoring.ipynb">View on GitHub</a></p>
-<p>The SDK-side scaffolding a researcher would run interactively before wiring drift detection
-into production monitoring.</p>
-<p><strong>What it does:</strong></p>
-<ol>
-<li>Pulls a single feature's recent history with <a href="../api/client/#muninn.client.MuninnClient.get_feature"><code>get_feature</code></a>.</li>
-<li>Splits the series into baseline and observed halves on <code>event_time</code>.</li>
-<li>Computes drift metrics: Δmean in baseline σ, σ-ratio, p95 shift. Flags anything outside a
-   researcher-defined band.</li>
-<li>Visualises the two halves with a KDE overlay and a value-over-time plot marking the split.</li>
-<li>Groups the panel by <code>code_version</code> to surface mid-window deploys — a class of regime change
-   the value distribution alone won't explain.</li>
-<li>Submits a replay over the same window with <a href="../api/client/#muninn.client.MuninnClient.submit_replay_job"><code>submit_replay_job</code></a>
-   and reports <code>events_replayed</code>, elapsed time, and ms/event throughput as a sanity ratio.</li>
-</ol>
-<p><strong>Prerequisites:</strong></p>
-<ul>
-<li>A Muninn <code>query-api</code> server at <code>localhost:8080</code> with at least one continuous-output feature
-  registered (e.g. <code>vpin</code> or <code>obi</code>).</li>
-<li><code>pip install "muninn-py[notebooks]"</code>.</li>
-</ul>
-<p><strong>Editing the notebook.</strong> The source lives in <code>notebooks/_build_drift_notebook.py</code> so diffs
-read as Python instead of JSON. Regenerate the <code>.ipynb</code> after editing the source:</p>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a>python<span class="w"> </span>notebooks/_build_drift_notebook.py
-</code></pre></div>
+<h1 id="streaming-client">Streaming client</h1>
+<p>Live feature streaming over Server-Sent Events. Attach to the server's
+<code>GET /api/v1/features/stream</code> endpoint and receive each <code>FeatureValue</code> as the
+feature engine produces it — the push counterpart to <code>MuninnClient.get_feature</code>.
+The stream is a live tail with no backfill.</p>
+
+
+<div class="doc doc-object doc-class">
+
+
+
+<h2 id="muninn.streaming.MuninnStreamClient" class="doc doc-heading">
+            <code>muninn.streaming.MuninnStreamClient</code>
+
+
+</h2>
+
+
+    <div class="doc doc-contents first">
+
+
+
+        <p>Synchronous client for the live feature stream (SSE).</p>
+
+
+
+
+
+
+
+
+
+
+
+<div class="doc doc-children">
+
+
+
+
+
+
+
+
+
+
+<div class="doc doc-object doc-function">
+
+
+<h3 id="muninn.streaming.MuninnStreamClient.stream" class="doc doc-heading">
+            <code class="highlight language-python"><span class="n">stream</span><span class="p">(</span><span class="n">feature</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span></code>
+
+</h3>
+
+
+    <div class="doc doc-contents ">
+
+        <p>Yield :class:<code>FeatureValue</code>s as the engine produces them.</p>
+<p>:param feature: restrict the stream to a single feature name (e.g.
+    <code>"vwap.1m"</code>); <code>None</code> streams every feature.
+:raises MuninnNotFoundError / MuninnValidationError / MuninnAPIError: if the
+    server rejects the initial request.
+:raises MuninnTimeoutError: on connection timeout.
+:raises MuninnStreamError: on a malformed event frame.</p>
+
+
+    </div>
+
+</div>
+
+
+
+  </div>
+
+    </div>
+
+</div>
+
+<div class="doc doc-object doc-class">
+
+
+
+<h2 id="muninn.streaming.AsyncMuninnStreamClient" class="doc doc-heading">
+            <code>muninn.streaming.AsyncMuninnStreamClient</code>
+
+
+</h2>
+
+
+    <div class="doc doc-contents first">
+
+
+
+        <p>Asynchronous client for the live feature stream (SSE).</p>
+
+
+
+
+
+
+
+
+
+
+
+<div class="doc doc-children">
+
+
+
+
+
+
+
+
+
+
+<div class="doc doc-object doc-function">
+
+
+<h3 id="muninn.streaming.AsyncMuninnStreamClient.stream" class="doc doc-heading">
+            <code class="highlight language-python"><span class="n">stream</span><span class="p">(</span><span class="n">feature</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span></code>
+
+  <span class="doc doc-labels">
+      <small class="doc doc-label doc-label-async"><code>async</code></small>
+  </span>
+
+</h3>
+
+
+    <div class="doc doc-contents ">
+
+        <p>Async-iterate :class:<code>FeatureValue</code>s as the engine produces them.</p>
+<p>See :meth:<code>MuninnStreamClient.stream</code> for parameters and raised errors.</p>
+
+
+    </div>
+
+</div>
+
+
+
+  </div>
+
+    </div>
+
+</div>
 
 
 
@@ -841,10 +997,10 @@ read as Python instead of JSON. Regenerate the <code>.ipynb</code> after editing
     
       
       
-      <script id="__config" type="application/json">{"annotate": null, "base": "..", "features": ["content.code.copy", "navigation.instant", "navigation.top", "navigation.sections", "search.highlight"], "search": "../assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": null}</script>
+      <script id="__config" type="application/json">{"annotate": null, "base": "../..", "features": ["content.code.copy", "navigation.instant", "navigation.top", "navigation.sections", "search.highlight"], "search": "../../assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": null}</script>
     
     
-      <script src="../assets/javascripts/bundle.79ae519e.min.js"></script>
+      <script src="../../assets/javascripts/bundle.79ae519e.min.js"></script>
       
     
   </body>

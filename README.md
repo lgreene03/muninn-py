@@ -2,7 +2,7 @@
 
 [![License: Apache 2.0](https://img.shields.io/badge/License-Apache_2.0-blue.svg)](LICENSE)
 
-**Python research SDK for [Muninn](https://github.com/lgreene03/muninn)** — an event-native market-data feature computation platform that emphasises deterministic replay and live/historical parity.
+**Python research SDK for [Muninn](https://github.com/lgreene03/muninn)** — an event-native market-data feature computation platform that emphasises deterministic replay and live/historical parity. Part of the **[Norse Stack](https://github.com/lgreene03/norse-stack)**.
 
 `muninn-py` is the notebook-side companion. It pulls features computed by a running Muninn `query-api` into [Polars](https://pola.rs/) or [pandas](https://pandas.pydata.org/) DataFrames, with a typed client that maps the server's contracts to pydantic models.
 

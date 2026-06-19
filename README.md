@@ -1,6 +1,7 @@
 # muninn-py
 
 [![CI](https://github.com/lgreene03/muninn-py/actions/workflows/ci.yml/badge.svg)](https://github.com/lgreene03/muninn-py/actions/workflows/ci.yml)
+[![PyPI](https://img.shields.io/pypi/v/muninn-py)](https://pypi.org/project/muninn-py/)
 [![License: Apache 2.0](https://img.shields.io/badge/License-Apache_2.0-blue.svg)](LICENSE)
 
 **Python research SDK for [Muninn](https://github.com/lgreene03/muninn)** — an event-native market-data feature computation platform that emphasises deterministic replay and live/historical parity. Part of the **[Norse Stack](https://github.com/lgreene03/norse-stack)**.

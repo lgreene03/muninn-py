@@ -66,20 +66,20 @@ Phased delivery, mirroring the discipline of the [server-side ROADMAP](https://g
 
 ---
 
-## Phase E — Polish and Distribute 🟢 _Mostly complete_
+## Phase E — Polish and Distribute ✅
 
 **Goal.** Be installable, discoverable, and explainable.
 
 **Deliverables.**
 - ✅ **Mkdocs documentation site.** Auto-rendered API reference (from docstrings + pydantic models), getting-started guide, notebook page. Hosted on GitHub Pages via `.github/workflows/docs.yml`.
 - ✅ **A second example notebook** beyond alpha-backtest — `notebooks/feature_drift_monitoring.ipynb` walks through baseline-vs-observed distributional drift (Δmean in baseline σ, σ-ratio, p95 shift), KDE + time-series visualisation, code-version cohort grouping, and a replay-job throughput sanity check. The notebook source lives in `notebooks/_build_drift_notebook.py` so diffs review as Python instead of JSON; regenerate the `.ipynb` with `python notebooks/_build_drift_notebook.py`.
-- 🟡 **PyPI publish.** Trusted Publisher setup steps already in `docs/RELEASING.md`; this phase is the actual `v0.1.0` tag-and-publish. Requires one-time manual registration on pypi.org, then `git tag v0.1.0 && git push origin v0.1.0`. _Gated by **T2** (first external audience — a talk, a shared doc-site URL, or a second person needing the install); see the shared [trigger catalog](https://github.com/lgreene03/sleipnir/blob/main/docs/TRIGGERS.md)._
+- ✅ **PyPI publish.** `v0.1.0` published to PyPI via Trusted Publishing (OIDC). `pip install muninn-py` works. Trusted Publisher setup steps in `docs/RELEASING.md`.
 - ✅ **`CONTRIBUTING.md`** and **`SECURITY.md`** matching the server repo's discipline.
 - ✅ **Cross-link from server's `companion-sdks` section** with the published doc-site URL. Muninn server README links to `https://lgreene03.github.io/muninn-py` alongside the repo URL.
 - ✅ **Streamlit researcher dashboard** (`muninn dashboard`, behind the `[dashboard]` extra). Direction A of the four-repo customer-UI plan. Pages: feature explorer, forward-returns + IC, calibration-CSV viewer. The polish surface for "show this to a stakeholder and they get it in 5 minutes". Auth + multi-tenancy explicitly out of scope — that's Direction C, a different product.
 - ✅ **SDK smoke test** (`scripts/smoke.sh`). Validates CLI commands and synthetic trade ingestion against a running Muninn server. Auto-boots the server from sibling repo if not already running.
 
-**Exit criteria.** `pip install muninn-py` works. A new user reading the docs site for 15 minutes can do meaningful research against a running server. _Substantively met; full close pending PyPI publish._
+**Exit criteria.** `pip install muninn-py` works. A new user reading the docs site for 15 minutes can do meaningful research against a running server. _Met._
 
 ---
 

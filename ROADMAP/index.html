@@ -657,10 +657,10 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#phase-e-polish-and-distribute-mostly-complete" class="md-nav__link">
+  <a href="#phase-e-polish-and-distribute" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Phase E — Polish and Distribute 🟢 Mostly complete
+        Phase E — Polish and Distribute ✅
       
     </span>
   </a>
@@ -777,17 +777,17 @@
 - ✅ <strong>Notebook execution in CI.</strong> <code>.github/workflows/integration.yml</code> has a <code>notebook-execution</code> job that checks out the Muninn server, boots the full stack via Docker, seeds synthetic data, then runs both notebooks (<code>alpha_backtest_demo.ipynb</code> and <code>feature_drift_monitoring.ipynb</code>) via <code>jupyter nbconvert --execute</code>. Executed notebooks are uploaded as artifacts.</p>
 <p><strong>Exit criteria.</strong> Every public method has at least one contract test against a real server. The bundled notebook executes end-to-end in CI. <em>Met.</em></p>
 <hr />
-<h2 id="phase-e-polish-and-distribute-mostly-complete">Phase E — Polish and Distribute 🟢 <em>Mostly complete</em></h2>
+<h2 id="phase-e-polish-and-distribute">Phase E — Polish and Distribute ✅</h2>
 <p><strong>Goal.</strong> Be installable, discoverable, and explainable.</p>
 <p><strong>Deliverables.</strong>
 - ✅ <strong>Mkdocs documentation site.</strong> Auto-rendered API reference (from docstrings + pydantic models), getting-started guide, notebook page. Hosted on GitHub Pages via <code>.github/workflows/docs.yml</code>.
 - ✅ <strong>A second example notebook</strong> beyond alpha-backtest — <code>notebooks/feature_drift_monitoring.ipynb</code> walks through baseline-vs-observed distributional drift (Δmean in baseline σ, σ-ratio, p95 shift), KDE + time-series visualisation, code-version cohort grouping, and a replay-job throughput sanity check. The notebook source lives in <code>notebooks/_build_drift_notebook.py</code> so diffs review as Python instead of JSON; regenerate the <code>.ipynb</code> with <code>python notebooks/_build_drift_notebook.py</code>.
-- 🟡 <strong>PyPI publish.</strong> Trusted Publisher setup steps already in <code>docs/RELEASING.md</code>; this phase is the actual <code>v0.1.0</code> tag-and-publish. Requires one-time manual registration on pypi.org, then <code>git tag v0.1.0 &amp;&amp; git push origin v0.1.0</code>. <em>Gated by <strong>T2</strong> (first external audience — a talk, a shared doc-site URL, or a second person needing the install); see the shared <a href="https://github.com/lgreene03/sleipnir/blob/main/docs/TRIGGERS.md">trigger catalog</a>.</em>
+- ✅ <strong>PyPI publish.</strong> <code>v0.1.0</code> published to PyPI via Trusted Publishing (OIDC). <code>pip install muninn-py</code> works. Trusted Publisher setup steps in <code>docs/RELEASING.md</code>.
 - ✅ <strong><code>CONTRIBUTING.md</code></strong> and <strong><code>SECURITY.md</code></strong> matching the server repo's discipline.
 - ✅ <strong>Cross-link from server's <code>companion-sdks</code> section</strong> with the published doc-site URL. Muninn server README links to <code>https://lgreene03.github.io/muninn-py</code> alongside the repo URL.
 - ✅ <strong>Streamlit researcher dashboard</strong> (<code>muninn dashboard</code>, behind the <code>[dashboard]</code> extra). Direction A of the four-repo customer-UI plan. Pages: feature explorer, forward-returns + IC, calibration-CSV viewer. The polish surface for "show this to a stakeholder and they get it in 5 minutes". Auth + multi-tenancy explicitly out of scope — that's Direction C, a different product.
 - ✅ <strong>SDK smoke test</strong> (<code>scripts/smoke.sh</code>). Validates CLI commands and synthetic trade ingestion against a running Muninn server. Auto-boots the server from sibling repo if not already running.</p>
-<p><strong>Exit criteria.</strong> <code>pip install muninn-py</code> works. A new user reading the docs site for 15 minutes can do meaningful research against a running server. <em>Substantively met; full close pending PyPI publish.</em></p>
+<p><strong>Exit criteria.</strong> <code>pip install muninn-py</code> works. A new user reading the docs site for 15 minutes can do meaningful research against a running server. <em>Met.</em></p>
 <hr />
 <h2 id="phase-g-live-streaming-client-sse-promoted-by-t3">Phase G — Live streaming client (SSE) ✅ <em>promoted by T3</em></h2>
 <p><strong>Goal.</strong> Consume the muninn server's live feature stream so a researcher can watch features evolve in real time instead of polling the historical Query API. <strong>Promoted out of Phase F when trigger T3 tripped</strong> — the server shipped <code>GET /api/v1/features/stream</code> (muninn Phase 10 / <a href="https://github.com/lgreene03/muninn/blob/main/docs/adr/0009-streaming-features-sse.md">ADR-0009</a>).</p>

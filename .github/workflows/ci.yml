@@ -5,6 +5,10 @@ on:
     branches: [main]
   pull_request:
     branches: [main]
+  schedule:
+    # Weekly dependency vulnerability sweep (Mondays 06:17 UTC). Picks up
+    # newly-disclosed CVEs in pinned deps even when no code has changed.
+    - cron: "17 6 * * 1"
   workflow_dispatch:
 
 concurrency:
@@ -22,10 +26,10 @@ jobs:
         python: ["3.10", "3.11", "3.12", "3.13"]
 
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6.0.0
 
       - name: Set up Python ${{ matrix.python }}
-        uses: actions/setup-python@v6
+        uses: actions/setup-python@a309ff8b426b58ec0e2a45f0f869d46889d02405 # v6.0.0
         with:
           python-version: ${{ matrix.python }}
           cache: pip
@@ -50,10 +54,10 @@ jobs:
     timeout-minutes: 15
 
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6.0.0
 
       - name: Set up Python 3.12
-        uses: actions/setup-python@v6
+        uses: actions/setup-python@a309ff8b426b58ec0e2a45f0f869d46889d02405 # v6.0.0
         with:
           python-version: "3.12"
           cache: pip
@@ -88,9 +92,38 @@ jobs:
           fi
 
       - name: Upload benchmark results
-        uses: actions/upload-artifact@v7
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.0
         if: always()
         with:
           name: benchmark-results-py3.12
           path: benchmark-results.json
           retention-days: 30
+
+  pip-audit:
+    name: pip-audit (dependency CVE scan)
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+
+    steps:
+      - uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6.0.0
+
+      - name: Set up Python 3.12
+        uses: actions/setup-python@a309ff8b426b58ec0e2a45f0f869d46889d02405 # v6.0.0
+        with:
+          python-version: "3.12"
+          cache: pip
+
+      - name: Install project and pip-audit
+        run: |
+          python -m pip install --upgrade pip
+          # Install the package so resolved runtime deps are audited, plus the
+          # optional extras that ship code we publish/import.
+          pip install -e ".[dev,notebooks,cache,dashboard]"
+          pip install pip-audit
+
+      - name: Audit installed dependencies for known CVEs
+        # Audits the resolved environment (transitive deps included). Fails the
+        # job on any known vulnerability; weekly schedule catches new CVEs even
+        # when no code changes. Use `--ignore-vuln <id>` here to triage a
+        # specific advisory if/when an unfixable transitive CVE blocks CI.
+        run: pip-audit --strict --desc

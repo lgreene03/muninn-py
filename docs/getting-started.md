@@ -128,9 +128,16 @@ Install with `pip install "muninn-py[cache]"`, then:
 ```python
 from muninn import MuninnClient
 
-with MuninnClient(cache_dir=".muninn_cache", cache_ttl=3600) as m:
+with MuninnClient(cache_dir=".muninn_cache") as m:
     # First call hits the server; subsequent calls with the same args
-    # are served from disk for up to 1 hour.
+    # are served from disk.
     df = m.get_features(instrument="BTC-USDT", features=["vwap.1m"],
                         start="2026-05-10T14:00:00Z", end="2026-05-10T15:00:00Z")
 ```
+
+## Next steps
+
+- [Research diagnostics](api/research.md) — information coefficient, IC decay, signal half-life, and capacity analysis.
+- [Factor model](api/factor.md) — Ledoit–Wolf-shrunk covariance and portfolio construction.
+- [`examples/ic_capacity_research.py`](https://github.com/lgreene03/muninn-py/blob/main/examples/ic_capacity_research.py) wires the whole research pipeline together end to end on an offline synthetic panel.
+

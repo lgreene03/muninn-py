@@ -59,5 +59,7 @@ nav:
     - Models: api/models.md
     - Exceptions: api/exceptions.md
     - Notebook helpers: api/notebook.md
+    - Factor model: api/factor.md
+    - Research diagnostics: api/research.md
   - Notebooks: notebooks.md
   - Changelog: changelog.md

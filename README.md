@@ -118,6 +118,16 @@ ic = information_coefficient(df, signals=["obi", "vpin"], return_col="fwd_return
 
 Pure functions, Polars-in/Polars-out, no wall-clock reads. Includes `forward_returns`, `information_coefficient`, `rolling_corr`, `hit_rate`.
 
+### Quant-research layer
+
+Beyond the notebook helpers, two numpy/pandas-only modules take you from an alpha
+score to evaluation and portfolio construction:
+
+- **`muninn.research`** — signal diagnostics: information coefficient (`ic`, `rank_ic`), IC decay curves (`ic_decay_curve`), signal half-life (`signal_half_life`, `autocorrelation`), and a `capacity_estimate` for how much notional a signal can absorb. See [docs/api/research.md](docs/api/research.md).
+- **`muninn.factor`** — a cross-sectional `FactorModel` with Ledoit–Wolf-shrunk covariance (`ledoit_wolf_shrinkage`) and a `PortfolioOptimizer` (mean–variance and risk-parity under dollar-neutral / gross-leverage `Constraints`). See [docs/api/factor.md](docs/api/factor.md).
+
+Both are self-contained — they import nothing from the HTTP client, so they run on any returns/​signal arrays. [`examples/ic_capacity_research.py`](examples/ic_capacity_research.py) wires the whole pipeline together end to end (features → alpha → IC → covariance → weights → backtest) on a fully offline synthetic panel.
+
 ### Resilient by default
 
 The clients retry transient failures (5xx, connection errors, timeouts) with exponential backoff and disable that behaviour when you want it disabled:
@@ -275,7 +285,6 @@ The test suite uses [respx](https://lundberg.github.io/respx/) to mock the Munin
 
 - **Not a backtesting framework.** It is a data-access library. Use it inside whatever research framework you prefer.
 - **Not a trading client.** No order routing, no execution, no portfolio state. The Muninn server itself is also not these things — see [NON_GOALS.md](https://github.com/lgreene03/muninn/blob/main/docs/steering/NON_GOALS.md).
-- **Not a streaming client (yet).** Polling-and-DataFrame is the primary mode. A streaming/async path is a possible follow-up if a real use case appears.
 
 ## License
 

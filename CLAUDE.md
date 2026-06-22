@@ -41,13 +41,16 @@ muninn dashboard  # Streamlit researcher dashboard (requires [dashboard] extra)
   - `client.py` — `MuninnClient` (sync, httpx-backed)
   - `async_client.py` — `AsyncMuninnClient` (async sibling)
   - `models.py` — Pydantic v2 models: `FeatureValue`, `FeatureDefinition`, `ReplayJob`
-  - `exceptions.py` — `MuninnError` hierarchy: `MuninnAPIError`, `MuninnNotFoundError`, `MuninnValidationError`, `MuninnTimeoutError`
-  - `retry.py` — `RetryConfig` for exponential backoff
-  - `cache.py` — Optional disk cache for closed event-time windows
+  - `streaming.py` — `MuninnStreamClient` / `AsyncMuninnStreamClient` (live SSE feature stream)
+  - `exceptions.py` — `MuninnError` hierarchy: `MuninnAPIError`, `MuninnNotFoundError`, `MuninnValidationError`, `MuninnTimeoutError`, `MuninnStreamError`
+  - `_retry.py` — `RetryConfig` for exponential backoff
+  - `_cache.py` — Optional disk cache for closed event-time windows
   - `notebook.py` — Research helpers: `forward_returns`, `information_coefficient`, `rolling_corr`, `hit_rate`
-  - `cli/` — Click-based CLI (`muninn features`, `muninn replay`, `muninn dashboard`)
+  - `research.py` — Alpha-research diagnostics: `ic`, `rank_ic`, `ic_decay_curve`, `signal_half_life`, `capacity_estimate`
+  - `factor.py` — Factor model + portfolio construction: `FactorModel`, `PortfolioOptimizer`, `Constraints`, `ledoit_wolf_shrinkage`
+  - `cli.py` — Click-based CLI (`muninn features`, `muninn replay`, `muninn stream`, `muninn dashboard`)
   - `dashboard/` — Streamlit researcher dashboard
-  - `_pandas.py` — `.pandas` accessor returning pandas DataFrames
+  - `pandas_client.py` — `.pandas` accessor returning pandas DataFrames
 
 ## Testing
 

@@ -95,7 +95,7 @@ Phased delivery, mirroring the discipline of the [server-side ROADMAP](https://g
 - ✅ **Exports** `MuninnStreamClient`, `AsyncMuninnStreamClient`, `MuninnStreamError` from the package root.
 - ✅ **Tests.** `tests/test_streaming.py` (sync + async: frame parsing, filter passthrough, HTTP-error mapping, malformed-frame handling) and a `muninn stream listen` CLI test, all respx-mocked. Full suite green; ruff + mypy `--strict` clean.
 
-**Exit criteria.** `for e in MuninnStreamClient().stream(feature="vwap.1m"): ...` yields live values sub-second after each window closes. _Met._ _Streaming docs page + a notebook example tracked as polish._
+**Exit criteria.** `for e in MuninnStreamClient().stream(feature="vwap.1m"): ...` yields live values sub-second after each window closes. _Met._ _Streaming docs page ([api/streaming.md](api/streaming.md)) shipped; a notebook example remains tracked as polish._
 
 ---
 
@@ -118,7 +118,6 @@ In the same spirit as the server's [NON_GOALS.md](https://github.com/lgreene03/m
 - **Not a trading client.** No orders, no execution, no portfolio state. The server isn't this either.
 - **Not a feature-engineering library.** Features are computed deterministically on the server. The SDK transports them; it doesn't invent new ones.
 - **Not multi-language.** Python-only. A TypeScript / Go / Rust client is a different project.
-- **Not a real-time streaming client** until the server has a streaming endpoint to consume.
 - **Not opinionated about plotting.** The notebook helpers compute values; the user picks the chart library.
 
 ---

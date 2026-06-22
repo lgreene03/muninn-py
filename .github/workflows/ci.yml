@@ -42,11 +42,22 @@ jobs:
       - name: Lint
         run: ruff check .
 
-      - name: Type-check
-        run: mypy src/muninn
-
       - name: Tests
         run: pytest -ra
+
+      - name: Type-check
+        # mypy is run against a single pinned numpy so the type-check is
+        # reproducible across the whole interpreter matrix. numpy's bundled
+        # stubs change shape/dtype signatures between minor releases (e.g.
+        # 2.2 vs 2.5), which under `--strict` flips the same `cast()` between
+        # "required" (no-any-return) and "redundant" (redundant-cast) — there
+        # is no single source form that satisfies every stub version at once.
+        # Pinning here decouples *type analysis* (version-portable) from the
+        # *runtime* matrix above, which still exercises tests on each numpy.
+        # Bump this pin when adopting a newer numpy stub baseline.
+        run: |
+          pip install 'numpy==2.5.0'
+          mypy src/muninn
 
   benchmark:
     name: benchmarks (py3.12)
@@ -126,4 +137,16 @@ jobs:
         # job on any known vulnerability; weekly schedule catches new CVEs even
         # when no code changes. Use `--ignore-vuln <id>` here to triage a
         # specific advisory if/when an unfixable transitive CVE blocks CI.
-        run: pip-audit --strict --desc
+        #
+        # CVE-2025-69872 (diskcache <=5.6.3): diskcache uses pickle for value
+        # serialization, so an attacker with WRITE ACCESS to the on-disk cache
+        # directory can achieve code execution when the cache is read. There is
+        # NO fixed release (5.6.3 is the latest; upstream treats pickle as the
+        # documented default), so it cannot be remediated by a version bump.
+        # It is non-applicable here: diskcache is an opt-in extra ([cache]),
+        # only audited because this job installs every extra; muninn stores only
+        # plain list[dict] JSON-style payloads (see src/muninn/_cache.py) into a
+        # caller-owned local directory, and write access to that directory is
+        # already a local trust boundary equivalent to running arbitrary code.
+        # Documented, scoped ignore — re-evaluate if diskcache ships a fix.
+        run: pip-audit --strict --desc --ignore-vuln CVE-2025-69872

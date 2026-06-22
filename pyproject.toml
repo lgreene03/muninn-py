@@ -106,7 +106,14 @@ select = ["E", "F", "W", "I", "N", "UP", "B", "A", "C4", "PIE", "SIM", "RET"]
 ignore = ["E501"]  # line length handled by formatter
 
 [tool.mypy]
-python_version = "3.10"
+# Type-check under 3.12 semantics. The runtime support floor is still 3.10
+# (see requires-python and the CI test matrix), but mypy must parse numpy's
+# bundled stubs, which use the PEP 695 `type` statement and therefore require
+# a parse target of >=3.12. Checking under 3.12 still validates code that runs
+# on 3.10 — 3.10 is a subset — so support coverage is unaffected; tests run on
+# the full 3.10–3.13 matrix. Paired with the pinned numpy in the CI Type-check
+# step so analysis is reproducible across the matrix.
+python_version = "3.12"
 strict = true
 warn_return_any = true
 warn_unused_ignores = true

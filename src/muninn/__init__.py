@@ -26,7 +26,7 @@ Quickstart
         df.head()
 """
 
-from muninn import notebook
+from muninn import notebook, research
 from muninn._retry import RetryConfig
 from muninn._version import __version__
 from muninn.async_client import AsyncMuninnClient
@@ -39,7 +39,21 @@ from muninn.exceptions import (
     MuninnTimeoutError,
     MuninnValidationError,
 )
+from muninn.factor import (
+    Constraints,
+    FactorModel,
+    PortfolioOptimizer,
+    ledoit_wolf_shrinkage,
+    risk_contributions,
+)
 from muninn.models import FeatureDefinition, FeatureValue, ReplayJob, ReplayJobStatus
+from muninn.research import (
+    CapacityResult,
+    ICResult,
+    capacity_estimate,
+    ic_decay_curve,
+    signal_half_life,
+)
 from muninn.streaming import AsyncMuninnStreamClient, MuninnStreamClient
 
 __all__ = [
@@ -60,4 +74,15 @@ __all__ = [
     "ReplayJob",
     "ReplayJobStatus",
     "notebook",
+    "FactorModel",
+    "PortfolioOptimizer",
+    "Constraints",
+    "ledoit_wolf_shrinkage",
+    "risk_contributions",
+    "research",
+    "ICResult",
+    "CapacityResult",
+    "ic_decay_curve",
+    "signal_half_life",
+    "capacity_estimate",
 ]

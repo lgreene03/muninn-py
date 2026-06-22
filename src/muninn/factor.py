@@ -82,7 +82,7 @@ def _zscore(v: FloatArray) -> FloatArray:
     sd = v.std()
     if sd == 0.0:
         return np.zeros_like(v)
-    return cast(FloatArray, (v - v.mean()) / sd)
+    return (v - v.mean()) / sd
 
 
 # --------------------------------------------------------------------------- #
@@ -313,12 +313,12 @@ class FactorModel:
         if denom <= 0.0:
             return np.zeros(x.shape[0])
         xc = x - x.mean(axis=1, keepdims=True)
-        return cast(FloatArray, (xc @ mc) / denom)
+        return (xc @ mc) / denom
 
     def _momentum(self, x: FloatArray) -> FloatArray:
         window = x if self.momentum_lookback is None else x[:, -self.momentum_lookback :]
         # Cumulative log-style return over the window: sum of period returns.
-        return cast(FloatArray, window.sum(axis=1))
+        return window.sum(axis=1)
 
     # -- accessors --------------------------------------------------------- #
     def _check(self) -> None:

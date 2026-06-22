@@ -44,7 +44,6 @@ from __future__ import annotations
 
 from collections.abc import Iterable
 from dataclasses import dataclass
-from typing import cast
 
 import numpy as np
 import numpy.typing as npt
@@ -405,8 +404,7 @@ def ic_decay_curve(
                 "n": res.n,
             }
         )
-    df = pd.DataFrame(rows).sort_values("horizon").reset_index(drop=True)
-    return cast(pd.DataFrame, df)
+    return pd.DataFrame(rows).sort_values("horizon").reset_index(drop=True)
 
 
 # --------------------------------------------------------------------------- #

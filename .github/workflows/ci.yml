@@ -45,16 +45,33 @@ jobs:
       - name: Tests
         run: pytest -ra
 
+  # Type-checking runs ONCE on a single interpreter, not per matrix leg: type
+  # analysis is version-portable (pyproject sets mypy's python_version), and the
+  # numpy stub baseline we pin for determinism (2.5.0) requires Python >=3.12 —
+  # so it can't be installed on the 3.10/3.11 test legs. numpy's bundled stubs
+  # change between minor releases (2.2 vs 2.5), flipping the same cast() between
+  # required (no-any-return) and redundant (redundant-cast) under --strict, so a
+  # single pinned baseline keeps the check deterministic. The matrix above still
+  # runs the tests on each interpreter's own resolved numpy.
+  type-check:
+    name: type-check (mypy)
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v6.0.0
+
+      - name: Set up Python 3.12
+        uses: actions/setup-python@a309ff8b426b58ec0e2a45f0f869d46889d02405 # v6.0.0
+        with:
+          python-version: "3.12"
+          cache: pip
+
+      - name: Install
+        run: |
+          python -m pip install --upgrade pip
+          pip install -e ".[dev]"
+
       - name: Type-check
-        # mypy is run against a single pinned numpy so the type-check is
-        # reproducible across the whole interpreter matrix. numpy's bundled
-        # stubs change shape/dtype signatures between minor releases (e.g.
-        # 2.2 vs 2.5), which under `--strict` flips the same `cast()` between
-        # "required" (no-any-return) and "redundant" (redundant-cast) — there
-        # is no single source form that satisfies every stub version at once.
-        # Pinning here decouples *type analysis* (version-portable) from the
-        # *runtime* matrix above, which still exercises tests on each numpy.
-        # Bump this pin when adopting a newer numpy stub baseline.
         run: |
           pip install 'numpy==2.5.0'
           mypy src/muninn

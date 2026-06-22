@@ -113,13 +113,14 @@ def _pearson(x: FloatArray, y: FloatArray) -> float:
     return float((xc @ yc) / denom)
 
 
-def _student_t_sf(t: float, dof: float) -> float:
-    """Two-sided survival probability ``P(|T| > |t|)`` for Student-t(dof).
+def _student_t_two_sided_p(t: float, dof: float) -> float:
+    """Two-sided tail probability ``P(|T| > |t|)`` for Student-t(dof).
 
-    Implemented via the regularised incomplete beta function
-    ``I_x(dof/2, 1/2)`` with ``x = dof / (dof + t^2)``; this is the exact
-    two-sided p-value and needs only numpy. For large ``dof`` it converges to
-    the normal tail, as expected.
+    This is the two-sided p-value, **not** a one-sided survival function:
+    it integrates both tails of the distribution. Implemented via the
+    regularised incomplete beta function ``I_x(dof/2, 1/2)`` with
+    ``x = dof / (dof + t^2)``; exact and needs only numpy. For large ``dof``
+    it converges to the two-sided normal tail, as expected.
     """
     if not np.isfinite(t) or dof <= 0:
         return float("nan")
@@ -331,7 +332,7 @@ def ic(
     else:
         dof = n - 2
         t_stat = coef * np.sqrt(dof / (1.0 - coef * coef))
-        p_value = _student_t_sf(t_stat, dof)
+        p_value = _student_t_two_sided_p(t_stat, dof)
 
     # Directional hit-rate over non-zero signals.
     nz = s != 0.0

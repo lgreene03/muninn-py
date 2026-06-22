@@ -525,6 +525,62 @@
 
               
             
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../api/factor/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Factor model
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../api/research/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Research diagnostics
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
           </ul>
         </nav>
       
@@ -798,7 +854,7 @@
 - ✅ <strong>CLI</strong> <code>muninn stream listen [--feature NAME] [--count N]</code> prints live events as newline-delimited JSON.
 - ✅ <strong>Exports</strong> <code>MuninnStreamClient</code>, <code>AsyncMuninnStreamClient</code>, <code>MuninnStreamError</code> from the package root.
 - ✅ <strong>Tests.</strong> <code>tests/test_streaming.py</code> (sync + async: frame parsing, filter passthrough, HTTP-error mapping, malformed-frame handling) and a <code>muninn stream listen</code> CLI test, all respx-mocked. Full suite green; ruff + mypy <code>--strict</code> clean.</p>
-<p><strong>Exit criteria.</strong> <code>for e in MuninnStreamClient().stream(feature="vwap.1m"): ...</code> yields live values sub-second after each window closes. <em>Met.</em> <em>Streaming docs page + a notebook example tracked as polish.</em></p>
+<p><strong>Exit criteria.</strong> <code>for e in MuninnStreamClient().stream(feature="vwap.1m"): ...</code> yields live values sub-second after each window closes. <em>Met.</em> <em>Streaming docs page (<a href="../api/streaming/">api/streaming.md</a>) shipped; a notebook example remains tracked as polish.</em></p>
 <hr />
 <h2 id="phase-f-future-deferred-speculative">Phase F — Future <em>(deferred / speculative)</em></h2>
 <p>Tracked so ideas aren't lost; explicitly not scheduled. Each is gated by an <strong>observable trigger</strong> (never a date) catalogued in <a href="https://github.com/lgreene03/sleipnir/blob/main/docs/TRIGGERS.md">sleipnir/docs/TRIGGERS.md</a>, the shared cross-repo trigger catalog. When a trigger trips, the item moves out of Phase F into the next numbered phase, marked 🟢 with the trigger ID.</p>
@@ -816,7 +872,6 @@
 <li><strong>Not a trading client.</strong> No orders, no execution, no portfolio state. The server isn't this either.</li>
 <li><strong>Not a feature-engineering library.</strong> Features are computed deterministically on the server. The SDK transports them; it doesn't invent new ones.</li>
 <li><strong>Not multi-language.</strong> Python-only. A TypeScript / Go / Rust client is a different project.</li>
-<li><strong>Not a real-time streaming client</strong> until the server has a streaming endpoint to consume.</li>
 <li><strong>Not opinionated about plotting.</strong> The notebook helpers compute values; the user picks the chart library.</li>
 </ul>
 <hr />

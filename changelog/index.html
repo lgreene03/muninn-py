@@ -527,6 +527,62 @@
 
               
             
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../api/factor/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Factor model
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../api/research/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Research diagnostics
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
           </ul>
         </nav>
       
@@ -643,6 +699,7 @@
 <h2 id="unreleased">[Unreleased]</h2>
 <h3 id="added">Added</h3>
 <ul>
+<li><strong>Quant-research layer — signal evaluation + portfolio construction.</strong> Two self-contained numpy/pandas-only modules (neither imports the HTTP client). <code>muninn.research</code>: alpha-research diagnostics — information coefficient (<code>ic</code>, <code>rank_ic</code> with t-stat and directional hit-rate), IC decay curves across horizons (<code>ic_decay_curve</code>), signal mean-reversion (<code>autocorrelation</code>, AR(1) <code>signal_half_life</code>), and a closed-form <code>capacity_estimate</code> under a square-root market-impact model; result types <code>ICResult</code> / <code>CapacityResult</code>. <code>muninn.factor</code>: a cross-sectional <code>FactorModel</code> with interpretable exposures and a Ledoit–Wolf-shrunk covariance (<code>ledoit_wolf_shrinkage</code>), plus a <code>PortfolioOptimizer</code> (turnover-penalised mean–variance and iterative risk-parity) under dollar-neutral / gross-leverage <code>Constraints</code>, with <code>risk_contributions</code>. Significance testing uses a stdlib-plus-numpy incomplete-beta (no scipy). New <code>examples/ic_capacity_research.py</code> wires features → alpha → IC → covariance → weights → backtest on a fully offline synthetic panel. Documented at <code>docs/api/research.md</code> and <code>docs/api/factor.md</code>.</li>
 <li><strong>Phase G — Live streaming client (SSE), promoted by trigger T3.</strong> New <code>muninn.streaming</code> module with <code>MuninnStreamClient</code> (sync) and <code>AsyncMuninnStreamClient</code> (async). Each <code>stream(feature=None)</code> connects to the server's <code>GET /api/v1/features/stream</code> (<code>text/event-stream</code>, muninn ADR-0009) and yields <code>FeatureValue</code>s as the feature engine produces them; the optional <code>feature=</code> filter restricts to one feature name. Both mirror the existing clients' construction (<code>host</code>, <code>timeout</code>, <code>headers</code>, connection-pool tunables) and context-manager lifecycle. SSE frames are decoded incrementally (multi-line <code>data</code>, keepalive comments and non-<code>feature</code> events ignored) with no new runtime dependency — pure <code>httpx.stream</code>. The read timeout is disabled for the long-lived connection while connect/write/pool stay bounded. HTTP-error mapping reuses the shared <code>unwrap</code> path (<code>MuninnNotFoundError</code> / <code>MuninnValidationError</code> / <code>MuninnAPIError</code>); new <code>MuninnStreamError</code> covers malformed frames. New CLI command <code>muninn stream listen [--feature NAME] [--count N]</code> prints live events as newline-delimited JSON. Exports <code>MuninnStreamClient</code>, <code>AsyncMuninnStreamClient</code>, <code>MuninnStreamError</code> from the package root. New <code>tests/test_streaming.py</code> (sync + async) plus a CLI test; ruff + mypy <code>--strict</code> clean.</li>
 </ul>
 <h2 id="010-2026-05-27">[0.1.0] — 2026-05-27</h2>

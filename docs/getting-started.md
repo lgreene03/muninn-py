@@ -44,7 +44,7 @@ from muninn import MuninnClient
 with MuninnClient() as m:
     # Discover what features the server exposes
     for feat in m.list_features():
-        print(feat.name, feat.version, feat.type)
+        print(feat.name, feat.version, feat.output_kind)
 
     # Pull a multi-feature time-series panel
     df = m.get_features(
@@ -130,9 +130,11 @@ from muninn import MuninnClient
 
 with MuninnClient(cache_dir=".muninn_cache") as m:
     # First call hits the server; subsequent calls with the same args
-    # are served from disk.
-    df = m.get_features(instrument="BTC-USDT", features=["vwap.1m"],
-                        start="2026-05-10T14:00:00Z", end="2026-05-10T15:00:00Z")
+    # are served from disk. The disk cache short-circuits on get_feature
+    # (singular); the multi-feature get_features / get_panel helpers
+    # benefit transitively, since they compose get_feature calls.
+    df = m.get_feature("vwap.1m", instrument="BTC-USDT",
+                       start="2026-05-10T14:00:00Z", end="2026-05-10T15:00:00Z")
 ```
 
 ## Next steps

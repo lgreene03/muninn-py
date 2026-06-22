@@ -151,7 +151,7 @@ def ledoit_wolf_shrinkage(
     else:  # pragma: no cover - guarded by the public API
         raise ValueError(f"unknown shrinkage target: {target!r}")
 
-    delta = _shrinkage_intensity(xc, sample, f, n_obs)
+    delta = _shrinkage_intensity(xc, sample, f, n_obs, target=target)
     cov = delta * f + (1.0 - delta) * sample
     # Symmetrise to kill floating-point asymmetry before downstream solves.
     cov = 0.5 * (cov + cov.T)
@@ -179,37 +179,76 @@ def _shrinkage_intensity(
     sample: FloatArray,
     f: FloatArray,
     n_obs: int,
+    *,
+    target: str,
 ) -> float:
     """Estimate the optimal shrinkage intensity ``delta`` (clipped to [0, 1]).
 
-    Uses the Ledoit–Wolf decomposition ``delta = (pi - rho) / gamma / n`` where
-    ``pi`` is the sum of asymptotic variances of the sample-covariance entries,
-    ``rho`` the covariance between sample and target entries, and ``gamma`` the
-    squared Frobenius distance between sample and target. ``rho`` is
-    approximated by its diagonal term, which is exact for the identity target
-    and an accurate, widely-used approximation for the constant-correlation
-    target.
+    Implements the Ledoit–Wolf decomposition ``delta = (pi - rho) / gamma / n``
+    of *Honey, I Shrunk the Sample Covariance Matrix* (Ledoit & Wolf, 2004) and
+    *Improved Estimation of the Covariance Matrix of Stock Returns* (Ledoit &
+    Wolf, 2003, JEF) — the canonical ``covCor`` / ``cov1Para`` estimators — where
+
+    - ``pi`` is the sum over ``i,j`` of the asymptotic variances of the
+      sample-covariance entries ``s_ij``;
+    - ``gamma`` is the squared Frobenius distance between the sample covariance
+      and the shrinkage target ``F``;
+    - ``rho`` is the sum of asymptotic covariances between the sample-covariance
+      entries and the (data-dependent) target entries.
+
+    The subtle term is ``rho``. For the **identity** target the off-diagonal of
+    ``F`` is the constant ``0`` and does not depend on the data, so ``rho``
+    collapses to its diagonal part ``sum_i Var(s_ii)`` exactly. For the
+    **constant-correlation** target the off-diagonal target entries
+    ``rbar * sqrt(s_ii s_jj)`` *do* depend on the sample variances, contributing
+    a non-zero off-diagonal term to ``rho``. Dropping that term (a "diagonal
+    approximation") systematically *understates* ``rho``, inflating
+    ``pi - rho`` and ``kappa``, which drives the intensity to saturate at
+    ``1.0`` and makes it non-monotone in the sample size ``T`` — the failure a
+    buy-side review flagged. We therefore compute the full canonical ``rho``,
+    matching Ledoit & Wolf's reference ``covCor`` implementation exactly.
     """
     n_assets = sample.shape[0]
-    # pi: sum over i,j of Var(s_ij). y holds the per-observation cross products.
-    # pi_mat[i,j] = mean_t (xc[i,t]*xc[j,t] - sample[i,j])^2
-    pi_mat = np.zeros((n_assets, n_assets))
-    for t in range(n_obs):
-        col = xc[:, t]
-        outer = np.outer(col, col)
-        diff = outer - sample
-        pi_mat += diff * diff
-    pi_mat /= n_obs
-    pi = pi_mat.sum()
+    # Work in (obs x assets) layout to mirror the canonical reference code.
+    y = xc.T  # (n_obs, n_assets)
+
+    # pi: sum over i,j of Var(s_ij). pi_mat[i,j] = mean_t (y_ti y_tj)^2 - s_ij^2.
+    y2 = y * y
+    pi_mat = (y2.T @ y2) / n_obs - sample * sample
+    pi = float(pi_mat.sum())
 
     # gamma: squared Frobenius distance between target and sample.
     gamma = float(np.sum((f - sample) ** 2))
-
-    # rho: diagonal approximation — exact contribution from the variance terms.
-    rho = float(np.trace(pi_mat))
-
     if gamma <= 0.0:
         return 0.0
+
+    # rho: diagonal part is exact; the off-diagonal part is non-zero only for a
+    # data-dependent target (constant-correlation), and zero for the identity
+    # target (whose off-diagonal entries are the constant 0).
+    rho_diag = float(np.trace(pi_mat))
+    rho_off = 0.0
+    if target == "constant_correlation":
+        samplevar = np.diag(sample)
+        sqrtvar = np.sqrt(np.clip(samplevar, 0.0, None))
+        denom = np.outer(sqrtvar, sqrtvar)
+        with np.errstate(divide="ignore", invalid="ignore"):
+            corr = np.where(denom > 0, sample / denom, 0.0)
+        off_mask = ~np.eye(n_assets, dtype=bool)
+        off = corr[off_mask]
+        rbar = float(off.mean()) if off.size else 0.0
+        # thetaMat[i,j] = AsyCov(s_ij, s_ii) estimate = E[y_ti^2 y_ti y_tj] - s_ii s_ij
+        term1 = ((y**3).T @ y) / n_obs
+        term2 = samplevar[:, None] * sample
+        theta_mat = term1 - term2
+        np.fill_diagonal(theta_mat, 0.0)
+        # scale[i,j] = sqrt(s_jj / s_ii); guarded against a zero-variance asset.
+        with np.errstate(divide="ignore", invalid="ignore"):
+            scale = np.where(
+                sqrtvar[:, None] > 0, sqrtvar[None, :] / sqrtvar[:, None], 0.0
+            )
+        rho_off = rbar * float(np.sum(scale * theta_mat))
+
+    rho = rho_diag + rho_off
     kappa = (pi - rho) / gamma
     delta = kappa / n_obs
     return float(min(1.0, max(0.0, delta)))

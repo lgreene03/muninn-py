@@ -20,7 +20,7 @@ with MuninnClient() as m:                        # zero config: defaults to http
         start="2026-05-10T14:00:00Z",
         end="2026-05-10T15:00:00Z",
     )
-    df.head()                                    # Polars DataFrame indexed by event_time
+    df.head()                                    # Polars DataFrame sorted/keyed by event_time
 ```
 
 - **Typed responses** via pydantic — `FeatureValue`, `FeatureDefinition`, `ReplayJob`.

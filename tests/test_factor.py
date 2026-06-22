@@ -86,6 +86,78 @@ def test_identity_target_shrinks_eigenvalue_spread() -> None:
     assert cond_shrunk < cond_sample  # better conditioned
 
 
+def test_shrinkage_intensity_matches_canonical_ledoit_wolf() -> None:
+    # Pins delta on a fixed 4-asset x 6-obs input against the canonical
+    # Ledoit & Wolf (2003 JEF / 2004) constant-correlation `covCor` estimator,
+    # cross-checked with an independent reference computation. This guards the
+    # off-diagonal rho term: a diagonal-only rho approximation gives a visibly
+    # different (inflated) intensity here.
+    x = np.array(
+        [
+            [0.10, -0.05, 0.02, 0.08, -0.03, 0.04],
+            [0.07, -0.02, 0.01, 0.06, -0.04, 0.03],
+            [-0.06, 0.04, -0.01, -0.05, 0.02, -0.02],
+            [0.09, -0.03, 0.03, 0.07, -0.05, 0.05],
+        ]
+    )
+    _, delta_cc = ledoit_wolf_shrinkage(x, target="constant_correlation")
+    _, delta_id = ledoit_wolf_shrinkage(x, target="identity")
+    assert delta_cc == pytest.approx(0.09259794749880958, rel=0, abs=1e-12)
+    assert delta_id == pytest.approx(0.08893563016722039, rel=0, abs=1e-12)
+    assert 0.0 <= delta_cc <= 1.0
+    assert 0.0 <= delta_id <= 1.0
+
+
+def test_shrinkage_intensity_decreases_with_more_observations() -> None:
+    # Core Ledoit-Wolf property: with more observations the sample covariance is
+    # better estimated, so the optimal shrinkage toward the structured target
+    # falls. A buy-side reviewer flagged the intensity as non-monotone in T and
+    # saturating at 1.0; the canonical estimator is asymptotically monotone.
+    # We use nested prefixes of ONE long series so only T changes (not the
+    # realised noise), and check the decline over the asymptotic regime.
+    rng = np.random.default_rng(42)
+    market = rng.normal(0.0, 0.02, size=2000)
+    betas = np.array([1.0, 1.1, 1.4, 0.8, 1.6])
+    idio = rng.normal(0.0, 0.01, size=(5, 2000))
+    full = betas[:, None] * market[None, :] + idio
+
+    deltas = {}
+    for t in (320, 640, 1280, 2000):
+        _, d = ledoit_wolf_shrinkage(full[:, :t], target="constant_correlation")
+        assert 0.0 <= d <= 1.0
+        deltas[t] = d
+    # Strictly decreasing across the asymptotic regime, and well off the 1.0
+    # saturation the buggy diagonal-only rho produced.
+    assert deltas[320] > deltas[640] > deltas[1280] > deltas[2000]
+    assert deltas[320] < 1.0
+    # Pin the canonical values so a regression in the rho formula is caught.
+    assert deltas[320] == pytest.approx(0.616445, abs=1e-5)
+    assert deltas[2000] == pytest.approx(0.068932, abs=1e-5)
+
+
+def test_identity_target_rho_is_diagonal_exact() -> None:
+    # For the identity target the off-diagonal of F is the constant 0 and does
+    # not depend on the data, so the canonical rho equals its diagonal part.
+    # Recomputing delta with an explicit diagonal-only rho must agree.
+    rng = np.random.default_rng(7)
+    returns = rng.normal(0.0, 0.01, size=(5, 200))
+    _, delta = ledoit_wolf_shrinkage(returns, target="identity")
+
+    xc = returns - returns.mean(axis=1, keepdims=True)
+    n_obs = returns.shape[1]
+    sample = (xc @ xc.T) / n_obs
+    mu = np.trace(sample) / sample.shape[0]
+    f = mu * np.eye(sample.shape[0])
+    y = xc.T
+    y2 = y * y
+    pi_mat = (y2.T @ y2) / n_obs - sample * sample
+    pi = pi_mat.sum()
+    gamma = np.sum((f - sample) ** 2)
+    rho = np.trace(pi_mat)  # diagonal-only is exact for identity
+    expected = min(1.0, max(0.0, (pi - rho) / gamma / n_obs))
+    assert delta == pytest.approx(expected, abs=1e-12)
+
+
 def test_shrinkage_rejects_single_observation() -> None:
     with pytest.raises(ValueError):
         ledoit_wolf_shrinkage(np.zeros((5, 1)))

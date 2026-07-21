@@ -18,10 +18,10 @@ jobs:
     timeout-minutes: 20
 
     steps:
-      - uses: actions/checkout@v7
+      - uses: actions/checkout@v7.0.1
 
       - name: Check out Muninn server
-        uses: actions/checkout@v7
+        uses: actions/checkout@v7.0.1
         with:
           repository: lgreene03/muninn
           path: muninn
@@ -48,10 +48,10 @@ jobs:
     timeout-minutes: 25
 
     steps:
-      - uses: actions/checkout@v7
+      - uses: actions/checkout@v7.0.1
 
       - name: Check out Muninn server
-        uses: actions/checkout@v7
+        uses: actions/checkout@v7.0.1
         with:
           repository: lgreene03/muninn
           path: muninn-server

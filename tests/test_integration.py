@@ -485,11 +485,37 @@ class TestGetFeatures:
     """``MuninnClient.get_features()`` — multi-feature fan-out + join."""
 
     def test_returns_joined_dataframe(self, seeded_client: MuninnClient) -> None:
-        features = seeded_client.list_features()
-        if len(features) < 2:
-            pytest.skip("Need at least 2 features to test get_features join")
+        # Select features that the fixture actually produces DATA for, rather
+        # than taking list_features()[:2] blindly.
+        #
+        # The seeded_stack fixture pushes TRADES only. Muninn defines
+        # book-derived features too (obi, micro_price — see muninn migration
+        # V006), so they appear in list_features() with no rows behind them.
+        # Taking the first two alphabetically therefore picked up micro_price
+        # and asserted on a column that could never exist, which broke this
+        # test the moment those definitions were seeded upstream. The failure
+        # was in the selection, not in get_features().
+        #
+        # If this fixture is ever extended to push book snapshots, the
+        # book-derived features will start carrying data and be selected here
+        # automatically.
+        names = [
+            f.name
+            for f in seeded_client.list_features()
+            if not seeded_client.get_feature(
+                instrument="BTC-USDT",
+                feature=f.name,
+                start="2026-01-15T12:00:00Z",
+                end="2026-01-15T12:10:00Z",
+            ).is_empty()
+        ][:2]
 
-        names = [f.name for f in features[:2]]
+        if len(names) < 2:
+            pytest.skip(
+                "Need at least 2 features with seeded data to test the join; "
+                f"found {len(names)}"
+            )
+
         df = seeded_client.get_features(
             instrument="BTC-USDT",
             features=names,

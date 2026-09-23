@@ -35,6 +35,18 @@ updates:
     schedule:
       interval: "weekly"
       day: "monday"
+    groups:
+      # codeql-action/init and codeql-action/analyze must move together: the
+      # action refuses to run when the two halves are on different versions.
+      # Ungrouped, dependabot opens one PR each, and merging either one alone
+      # turns CodeQL red until the other lands. That happened once already and
+      # was fixed by hand in #47, which patched the symptom -- dependabot went
+      # on splitting them, and did so again at 4.38.1 (#49, #50). This is the
+      # fix that holds.
+      codeql-action:
+        applies-to: version-updates
+        patterns:
+          - "github/codeql-action*"
     labels:
       - "dependencies"
       - "github-actions"

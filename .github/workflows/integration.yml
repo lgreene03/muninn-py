@@ -86,8 +86,28 @@ jobs:
           until docker compose exec -T postgres pg_isready -U muninn; do sleep 2; done
           echo "Waiting for Redpanda..."
           until docker compose exec -T redpanda rpk cluster health; do sleep 2; done
-          echo "Waiting for MinIO..."
-          until docker compose exec -T minio mc ready local; do sleep 2; done
+          # Object storage is SeaweedFS since muninn#63: MinIO withdrew anonymous
+          # image pulls, so `minio` and `mc` no longer exist as a service or a
+          # tool. Waiting on the bucket-creating init container, rather than on
+          # the server being up, also closes a race the old step had: muninn
+          # could start before its buckets existed.
+          #
+          # Two traps, both measured before this was written:
+          #  - `docker compose wait` ignores containers that have already
+          #    exited and fails with "no containers". Init is fast, so it has
+          #    usually finished by now, and that would fail CI spuriously.
+          #    Plain `docker wait` on the ID works whether it is running or not.
+          #  - `docker wait` exits 0 even when the container failed; it only
+          #    PRINTS the container's code. So the printed value is compared.
+          echo "Waiting for object storage buckets..."
+          init_id=$(docker compose ps -aq objectstore-init)
+          if [ -z "$init_id" ]; then echo "objectstore-init container not found"; exit 1; fi
+          init_code=$(docker wait "$init_id")
+          if [ "$init_code" != "0" ]; then
+            echo "bucket creation failed with exit code $init_code"
+            docker compose logs objectstore-init
+            exit 1
+          fi
 
       - name: Start Muninn server
         working-directory: muninn-server

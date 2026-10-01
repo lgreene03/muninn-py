@@ -195,7 +195,7 @@ def _wait_for_service_health(
     """Poll until *service*'s container reports a healthy Docker healthcheck.
 
     Used in place of ``docker compose up --wait``: the Muninn compose file ships
-    a one-shot ``minio-init`` bucket-creator that exits 0 once the buckets exist,
+    a one-shot ``objectstore-init`` bucket-creator that exits 0 once the buckets exist,
     and ``--wait`` mis-reports that clean exit as a stack failure. We boot the
     stack detached and wait on the long-running services' healthchecks directly.
     """
@@ -217,6 +217,31 @@ def _wait_for_service_health(
     raise TimeoutError(f"Service {service!r} did not become healthy within {timeout}s")
 
 
+def _wait_for_service_success(
+    service: str, *, cwd: Path, timeout: float = 120, interval: float = 2
+) -> None:
+    """Wait for a one-shot service to finish, and fail unless it exited 0.
+
+    Two traps, both measured before this was written. ``docker compose wait``
+    ignores containers that have already exited, and a fast init container has
+    usually finished by the time this runs, so it would fail spuriously. And
+    ``docker wait`` exits 0 even when the container failed: it only PRINTS the
+    container's exit code, so that printed value is what gets compared.
+    """
+    deadline = time.monotonic() + timeout
+    cid = ""
+    while time.monotonic() < deadline and not cid:
+        cid = _run(f"docker compose -f {COMPOSE_FILE} ps -aq {service}", cwd=cwd, check=False)
+        if not cid:
+            time.sleep(interval)
+    if not cid:
+        raise TimeoutError(f"Service {service!r} never started within {timeout}s")
+    code = _run(f"docker wait {cid}", check=False)
+    if code != "0":
+        logs = _run(f"docker compose -f {COMPOSE_FILE} logs {service}", cwd=cwd, check=False)
+        raise RuntimeError(f"Service {service!r} exited {code!r}:\n{logs}")
+
+
 @pytest.fixture(scope="session")
 def compose_stack() -> Generator[dict[str, Any], None, None]:
     """Boot the full Muninn infrastructure + server via ``docker compose``.
@@ -227,7 +252,7 @@ def compose_stack() -> Generator[dict[str, Any], None, None]:
             "muninn_url": "http://localhost:<port>",
             "postgres_port": <int>,
             "redpanda_port": <int>,
-            "minio_port": <int>,
+            "objectstore_port": <int>,
         }
 
     Tears everything down after the session.
@@ -241,10 +266,10 @@ def compose_stack() -> Generator[dict[str, Any], None, None]:
     project_name = f"muninn_integ_{uuid.uuid4().hex[:8]}"
     os.environ["COMPOSE_PROJECT_NAME"] = project_name
 
-    # ---- 1. Boot infrastructure (Postgres, Redpanda, MinIO) ---------------
+    # ---- 1. Boot infrastructure (Postgres, Redpanda, object storage) ------
 
     # Boot detached rather than with ``--wait``: the Muninn compose file includes
-    # a one-shot ``minio-init`` service that creates the MinIO buckets and exits 0.
+    # a one-shot ``objectstore-init`` service that creates the buckets and exits 0.
     # ``docker compose up --wait`` treats that clean exit as a stack failure
     # (nothing depends on it via ``service_completed_successfully``), so we start
     # detached and wait on the long-running services' healthchecks ourselves.
@@ -255,8 +280,15 @@ def compose_stack() -> Generator[dict[str, Any], None, None]:
     )
     compose.start()
 
-    for _svc in ("postgres", "redpanda", "minio"):
+    # Object storage is SeaweedFS since lgreene03/muninn#63, after MinIO withdrew
+    # anonymous image pulls. Compose commands take SERVICE names, so these say
+    # `objectstore`; the server still reaches it as `minio` through a network
+    # alias, which is why MUNINN_STORAGE_S3_ENDPOINT below is unchanged.
+    for _svc in ("postgres", "redpanda", "objectstore"):
         _wait_for_service_health(_svc, cwd=MUNINN_SERVER_DIR)
+    # Wait for the buckets, not just the server. Without this the Muninn server
+    # could start before its buckets existed.
+    _wait_for_service_success("objectstore-init", cwd=MUNINN_SERVER_DIR)
 
     # Resolve the host-side ports that Docker assigned. The compose file
     # maps fixed host ports (5433, 19092, 9002), but in CI those may clash.
@@ -267,8 +299,8 @@ def compose_stack() -> Generator[dict[str, Any], None, None]:
     redpanda_port = int(
         compose.get_service_port("redpanda", 19092)
     )
-    minio_port = int(
-        compose.get_service_port("minio", 9000)
+    objectstore_port = int(
+        compose.get_service_port("objectstore", 9000)
     )
 
     # ---- 2. Build and run the Muninn server container on the same network -
@@ -284,7 +316,8 @@ def compose_stack() -> Generator[dict[str, Any], None, None]:
     )
 
     # Run the server container, connected to the compose network so it can
-    # reach postgres/redpanda/minio by their service names.
+    # reach postgres and redpanda by service name, and object storage by its
+    # `minio` network alias.
     _run(
         f"docker run -d --name {container_name} "
         f"--network {network_name} "
@@ -312,7 +345,7 @@ def compose_stack() -> Generator[dict[str, Any], None, None]:
             "muninn_url": muninn_url,
             "postgres_port": postgres_port,
             "redpanda_port": redpanda_port,
-            "minio_port": minio_port,
+            "objectstore_port": objectstore_port,
             "project_name": project_name,
         }
     finally:
